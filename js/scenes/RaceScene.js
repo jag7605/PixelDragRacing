@@ -12,11 +12,14 @@ export default class RaceScene extends Phaser.Scene {
             frameWidth: 256,
             frameHeight: 256
         });
+
+        this.load.image('guage', 'assets/ui/Speedometer1/AUS1.png'); // load speedometer image
     }
 
     create() {
         this.sky = this.add.tileSprite(0, 0, 1280, 720, 'sky').setOrigin(0, 0); // create sky background
         this.road = this.add.tileSprite(0, 300, 1280, 256, 'road').setOrigin(0, 0); // create road background
+        this.guage = this.add.image(640, 650, 'guage').setScale(0.5); // create speedometer image
 
         this.anims.create({ // create car animation
             key: 'drive',
