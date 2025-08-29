@@ -2,7 +2,7 @@ import Car from '../gameplay/Car.js';
 
 export default class RaceScene extends Phaser.Scene {
     constructor() {
-        super('RaceScene'); 
+        super('RaceScene');
     }
 
     preload() {
@@ -13,13 +13,14 @@ export default class RaceScene extends Phaser.Scene {
             frameHeight: 256
         });
 
-        this.load.image('guage', 'assets/ui/Speedometer1/AUS1.png'); // load speedometer image
+        // load RPM dial and MPH dial to the game
+        this.load.image('rpmDial', 'assets/Speedometer/RPM.png');
+        this.load.image('mphDial', 'assets/Speedometer/MPH.png');
     }
 
     create() {
         this.sky = this.add.tileSprite(0, 0, 1280, 720, 'sky').setOrigin(0, 0); // create sky background
         this.road = this.add.tileSprite(0, 300, 1280, 256, 'road').setOrigin(0, 0); // create road background
-        this.guage = this.add.image(640, 650, 'guage').setScale(0.5); // create speedometer image
 
         this.anims.create({ // create car animation
             key: 'drive',
@@ -40,7 +41,80 @@ export default class RaceScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0, 0);
 
-        this.startTime = this.time.now; 
+        this.startTime = this.time.now;
+
+
+        //radius for MPH number circular placement
+        let MPHcenterX = 750;
+        let MPHcenterY = 617;
+        let MPHradius = 70;
+        let MPHstartAngle = -225; // start angle (degrees)
+        let MPHendAngle = 45;  // end angle (degrees)
+        let MPHsteps = 14;  // spacing between numbers
+
+        // radius for RPM number circular placement
+        let RPMcenterX = 530;
+        let RPMcenterY = 620;
+        let RPMradius = 70;
+        let RPMstartAngle = -225; // start angle (degrees)
+        let RPMendAngle = 45;  // end angle (degrees)
+        let RPMsteps = 10;  // spacing between numbers
+
+        //place down RPM and MPH dials
+        this.rpmDial = this.add.image(530, 620, 'rpmDial').setScale(0.5);
+        this.mphDial = this.add.image(750, 620, 'mphDial').setScale(0.5);
+
+        //place down MPH numbers in a circular pattern
+        for (let i = 0; i <= MPHsteps; i++) {
+            let value = i * 20;
+            let angleDeg = Phaser.Math.Linear(MPHstartAngle, MPHendAngle, i / MPHsteps);
+            let angleRad = Phaser.Math.DegToRad(angleDeg);
+
+            let x = MPHcenterX + MPHradius * Math.cos(angleRad);
+            let y = MPHcenterY + MPHradius * Math.sin(angleRad);
+
+            this.add.text(x, y, value.toString(), { fontSize: "10px", color: "#fff" }).setOrigin(0.5);
+
+            // Draw tick line
+            let innerRadius = MPHradius + 15; // start of line (closer to center)
+            let outerRadius = MPHradius + 10;  // end of line (goes outside the numbers)
+
+            let tick = this.add.graphics();
+            tick.lineStyle(2, 0xffffff); // white tick
+            tick.beginPath();
+            tick.moveTo(MPHcenterX + innerRadius * Math.cos(angleRad),
+                MPHcenterY + innerRadius * Math.sin(angleRad));
+            tick.lineTo(MPHcenterX + outerRadius * Math.cos(angleRad),
+                MPHcenterY + outerRadius * Math.sin(angleRad));
+            tick.strokePath();
+        }
+
+        //place down RPM numbers in a circular pattern
+        for (let i = 0; i <= RPMsteps; i++) {
+            let value = i;
+            let angleDeg = Phaser.Math.Linear(RPMstartAngle, RPMendAngle, i / RPMsteps);
+            let angleRad = Phaser.Math.DegToRad(angleDeg);
+
+            let x = RPMcenterX + RPMradius * Math.cos(angleRad);
+            let y = RPMcenterY + RPMradius * Math.sin(angleRad);
+
+            let color = (i >= RPMsteps - 1) ? "#ff0000" : "#ffffff";
+
+            this.add.text(x, y, value.toString(), { fontSize: "15px", color: color }).setOrigin(0.5);
+
+            // Draw tick line
+            let innerRadius = RPMradius + 20;
+            let outerRadius = RPMradius + 10;
+
+            let tick = this.add.graphics();
+            tick.lineStyle(2, 0xffffff);
+            tick.beginPath();
+            tick.moveTo(RPMcenterX + innerRadius * Math.cos(angleRad),
+                RPMcenterY + innerRadius * Math.sin(angleRad));
+            tick.lineTo(RPMcenterX + outerRadius * Math.cos(angleRad),
+                RPMcenterY + outerRadius * Math.sin(angleRad));
+            tick.strokePath();
+        }
     }
 
     update(time, delta) { // update method called every frame
