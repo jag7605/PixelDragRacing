@@ -16,6 +16,8 @@ export default class RaceScene extends Phaser.Scene {
         // load RPM dial and MPH dial to the game
         this.load.image('rpmDial', 'assets/Speedometer/RPM.png');
         this.load.image('mphDial', 'assets/Speedometer/MPH.png');
+
+        this.load.image('pauseButton', 'assets/ui/buttonImages/pause2.png');// load pause button
     }
 
     create() {
@@ -42,6 +44,27 @@ export default class RaceScene extends Phaser.Scene {
         }).setOrigin(0, 0);
 
         this.startTime = this.time.now;
+
+        //pause button in top right corner
+        this.pauseButton = this.add.image(1230, 50, 'pauseButton')
+            .setInteractive()
+            .setOrigin(0.5)
+            .setScale(0.4);
+
+        // Hover effect: darken
+        this.pauseButton.on('pointerover', () => {
+            this.pauseButton.setTint(0x888888); // dark tint
+        });
+
+        this.pauseButton.on('pointerout', () => {
+            this.pauseButton.clearTint(); // remove tint
+        });
+            
+        this.pauseButton.on('pointerdown', () => {
+            this.scene.launch('PauseScene');
+            this.scene.bringToTop('PauseScene');
+            this.scene.pause(); 
+        });
 
 
         //radius for MPH number circular placement
