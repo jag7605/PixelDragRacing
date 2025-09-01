@@ -89,6 +89,27 @@ export default class RaceScene extends Phaser.Scene {
             tick.strokePath();
         }
 
+        // Draw redline arc on RPM dial (8.5k to 10k)
+        let redline = this.add.graphics();
+        redline.lineStyle(6.5, 0xff0000, 1); // thick red arc
+
+        // Convert RPM values to dial angles
+        let startFraction = 8500 / 10000; // 0.85
+        let endFraction = 1.0;            // 10k
+
+        let startAngle = Phaser.Math.DegToRad(
+            Phaser.Math.Linear(RPMstartAngle, RPMendAngle, startFraction)
+        );
+        let endAngle = Phaser.Math.DegToRad(
+            Phaser.Math.Linear(RPMstartAngle, RPMendAngle, endFraction)
+        );
+
+        // Draw the arc
+        redline.beginPath();
+        let redlineRadius = RPMradius + 12; // push arc further outside the numbers
+        redline.arc(RPMcenterX, RPMcenterY, redlineRadius, startAngle, endAngle, false);
+        redline.strokePath();
+
         //place down RPM numbers in a circular pattern
         for (let i = 0; i <= RPMsteps; i++) {
             let value = i;
@@ -115,6 +136,40 @@ export default class RaceScene extends Phaser.Scene {
                 RPMcenterY + outerRadius * Math.sin(angleRad));
             tick.strokePath();
         }
+
+
+        //drawing needles for MPH dial
+        this.mphNeedle = this.add.graphics();
+        this.mphNeedle.lineStyle(3, 0xff0000, 1); // red needle
+        this.mphNeedle.beginPath();
+        this.mphNeedle.moveTo(0, 0);   // needle base (center of dial)
+        this.mphNeedle.lineTo(60, 0); // needle length (points upward)
+        this.mphNeedle.strokePath();
+
+        // Position needle at center of MPH dial
+        this.mphNeedle.x = MPHcenterX;
+        this.mphNeedle.y = MPHcenterY;
+
+        // Rotate to starting angle (0 MPH = far left)
+        this.mphNeedle.setRotation(Phaser.Math.DegToRad(MPHstartAngle));
+
+
+        // drawing needles for RPM dial
+        this.rpmNeedle = this.add.graphics();
+        this.rpmNeedle.lineStyle(3, 0xff0000, 1); // red needle
+        this.rpmNeedle.beginPath();
+        this.rpmNeedle.moveTo(0, 0);    // base (center of dial)
+        this.rpmNeedle.lineTo(50, 0);   // needle length (points right initially)
+        this.rpmNeedle.strokePath();
+
+        // Position at dial center
+        this.rpmNeedle.x = RPMcenterX;
+        this.rpmNeedle.y = RPMcenterY;
+
+        // Set initial rotation (0 RPM = far left)
+        let rpmFraction = Phaser.Math.Clamp(this.playerCar.rpm / 10000, 0, 1);
+        let rpmAngle = Phaser.Math.Linear(-225, 45, rpmFraction);
+        this.rpmNeedle.setRotation(Phaser.Math.DegToRad(rpmAngle));
     }
 
     update(time, delta) { // update method called every frame
@@ -134,5 +189,13 @@ export default class RaceScene extends Phaser.Scene {
             `Top Speed: ${this.playerCar.topSpeed.toFixed(1)} km/h\n` + // display top speed
             `0-100 Time: ${this.playerCar.zeroToHundredTime ? this.playerCar.zeroToHundredTime.toFixed(2) + 's' : 'N/A'}` // display 0-100 time
         );
+        // Update MPH needle rotation based on speed (0 to 280 km/h mapped to -225 to 45 degrees)
+        let speedAngle = Phaser.Math.Linear(-225, 45, Phaser.Math.Clamp(this.playerCar.speed / 280, 0, 1));
+        this.mphNeedle.setRotation(Phaser.Math.DegToRad(speedAngle));
+
+        // Update RPM needle rotation based on RPM (0 to 10000 RPM mapped to -225 to 45 degrees)
+        let rpmFraction = Phaser.Math.Clamp(this.playerCar.rpm / 10000, 0, 1);
+        let rpmAngle = Phaser.Math.Linear(-225, 45, rpmFraction) - 20;
+        this.rpmNeedle.setRotation(Phaser.Math.DegToRad(rpmAngle));
     }
 }
