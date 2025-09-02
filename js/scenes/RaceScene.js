@@ -59,13 +59,56 @@ export default class RaceScene extends Phaser.Scene {
         this.pauseButton.on('pointerout', () => {
             this.pauseButton.clearTint(); // remove tint
         });
-            
+
         this.pauseButton.on('pointerdown', () => {
             this.scene.launch('PauseScene');
             this.scene.bringToTop('PauseScene');
-            this.scene.pause(); 
+            this.scene.pause();
         });
 
+        // ---draw a trapizium--- 
+        let graphics = this.add.graphics();
+        graphics.fillStyle(0x1f1f1f, 1);
+        graphics.beginPath();
+        graphics.moveTo(610, 530); // top-left
+        graphics.lineTo(670, 530); // top-right
+        graphics.lineTo(800, 720); // bottom-right
+        graphics.lineTo(480, 720); // bottom-left
+        graphics.closePath();
+        graphics.fillPath();
+
+        // ---draw trapizium after the background--- 
+        graphics = this.add.graphics();
+        graphics.fillStyle(0x333333, 1);
+        graphics.beginPath();
+        graphics.moveTo(370, 670); // top-left
+        graphics.lineTo(500, 670); // top-right
+        graphics.lineTo(500, 720); // bottom-right
+        graphics.lineTo(400, 720); // bottom-left
+        graphics.closePath();
+        graphics.fillPath();
+
+        // add the word "GEAR" above the gear indicator
+        this.add.text(405, 670, 'GEAR', {
+            fontFamily: 'Digital7',
+            fontSize: '15px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+
+        // gear indicator with fonts family Digital 7 with slightly glowing effect
+        this.getcurrentGear = this.add.text(420, 700, '1', {
+            fontFamily: 'Digital7',
+            fontSize: '30px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 6
+        }).setOrigin(0.5);
+
+        // ---draw a HUD behind gauge---
+        this.Gaugebackground = this.add.circle(530, 620, 110, 0x1f1f1f);
+        this.Gaugebackground = this.add.circle(750, 620, 110, 0x1f1f1f);
 
         //radius for MPH number circular placement
         let MPHcenterX = 750;
@@ -133,7 +176,7 @@ export default class RaceScene extends Phaser.Scene {
         redline.arc(RPMcenterX, RPMcenterY, redlineRadius, startAngle, endAngle, false);
         redline.strokePath();
 
-        //place down RPM numbers in a circular pattern
+        // ---place down RPM numbers in a circular pattern---
         for (let i = 0; i <= RPMsteps; i++) {
             let value = i;
             let angleDeg = Phaser.Math.Linear(RPMstartAngle, RPMendAngle, i / RPMsteps);
@@ -161,13 +204,14 @@ export default class RaceScene extends Phaser.Scene {
         }
 
 
-        //drawing needles for MPH dial
+        //---drawing needles for MPH dial---
         this.mphNeedle = this.add.graphics();
         this.mphNeedle.lineStyle(3, 0xff0000, 1); // red needle
         this.mphNeedle.beginPath();
         this.mphNeedle.moveTo(0, 0);   // needle base (center of dial)
         this.mphNeedle.lineTo(60, 0); // needle length (points upward)
         this.mphNeedle.strokePath();
+        this.Gaugebackground = this.add.circle(750, 620, 10, 0x333333);
 
         // Position needle at center of MPH dial
         this.mphNeedle.x = MPHcenterX;
@@ -177,13 +221,14 @@ export default class RaceScene extends Phaser.Scene {
         this.mphNeedle.setRotation(Phaser.Math.DegToRad(MPHstartAngle));
 
 
-        // drawing needles for RPM dial
+        // ---drawing needles for RPM dial---
         this.rpmNeedle = this.add.graphics();
         this.rpmNeedle.lineStyle(3, 0xff0000, 1); // red needle
         this.rpmNeedle.beginPath();
         this.rpmNeedle.moveTo(0, 0);    // base (center of dial)
-        this.rpmNeedle.lineTo(50, 0);   // needle length (points right initially)
+        this.rpmNeedle.lineTo(60, 0);   // needle length (points right initially)
         this.rpmNeedle.strokePath();
+        this.rpmCircle = this.add.circle(530, 620, 10, 0x333333);
 
         // Position at dial center
         this.rpmNeedle.x = RPMcenterX;
@@ -193,6 +238,31 @@ export default class RaceScene extends Phaser.Scene {
         let rpmFraction = Phaser.Math.Clamp(this.playerCar.rpm / 10000, 0, 1);
         let rpmAngle = Phaser.Math.Linear(-225, 45, rpmFraction);
         this.rpmNeedle.setRotation(Phaser.Math.DegToRad(rpmAngle));
+
+        // ---Create shift light (initially grey/off)---
+        this.shiftLight = this.add.circle(640, 570, 15, 0x333333);
+
+        if (this.playerCar.rpm >= 8500) {
+            this.shiftLight.fillColor = 0xff0000; // bright red when time to shift
+        } else {
+            this.shiftLight.fillColor = 0x333333; // dim grey when off
+        }
+
+        if (this.playerCar.rpm >= 8500) {
+            this.shiftLight.visible = Math.floor(time / 200) % 2 === 0; // flashes every 200ms
+        } else {
+            this.shiftLight.visible = true;
+            this.shiftLight.fillColor = 0x333333;
+        }
+
+        // represent the speed with fonts digital 7
+        this.speedText = this.add.text(620, 690, '0', {
+            fontFamily: 'Digital7',
+            fontSize: '20px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 8
+        }).setOrigin(0.5);
     }
 
     update(time, delta) { // update method called every frame
@@ -218,7 +288,20 @@ export default class RaceScene extends Phaser.Scene {
 
         // Update RPM needle rotation based on RPM (0 to 10000 RPM mapped to -225 to 45 degrees)
         let rpmFraction = Phaser.Math.Clamp(this.playerCar.rpm / 10000, 0, 1);
-        let rpmAngle = Phaser.Math.Linear(-225, 45, rpmFraction) - 20;
+        let rpmAngle = Phaser.Math.Linear(-225, 45, rpmFraction);
         this.rpmNeedle.setRotation(Phaser.Math.DegToRad(rpmAngle));
+
+        // Update shift light based on RPM
+        if (this.playerCar.rpm >= 8500) {
+            this.shiftLight.fillColor = 0xff0000; // bright red when time to shift
+        } else {
+            this.shiftLight.fillColor = 0x333333; // dim grey when off
+        }
+
+        // update gear indicator
+        this.getcurrentGear.setText(this.playerCar.getcurrentGear());
+
+        // Update speed text
+        this.speedText.setText(this.playerCar.speed.toFixed(0));
     }
 }

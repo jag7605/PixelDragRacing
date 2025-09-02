@@ -140,4 +140,9 @@ export default class Car {
     getRPM() {
         return this.rpm.toFixed(0);
     }
+
+    // Method to get current gear for HUD
+    getcurrentGear() {
+        return this.gearSystem.currentGear;
+    }
 }

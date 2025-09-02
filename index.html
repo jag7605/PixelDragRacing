@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,11 +10,21 @@
         body {
             margin: 0;
             padding: 0;
-            background: #000; /* Black background for better contrast */
-            overflow: hidden; /* Hide scrollbars */
+            background: #000;
+            /* Black background for better contrast */
+            overflow: hidden;
+            /* Hide scrollbars */
         }
     </style>
+    <style>
+        @font-face {
+            font-family: 'Digital7';
+            src: url('assets/Fonts/digital-7.ttf') format('truetype');
+        }
+    </style>
+
 </head>
+
 <body>
     <div id="game-container"></div> <!-- Game container for Phaser. This ensures proper sizing and positioning. -->
 
@@ -31,4 +42,5 @@
     <script type="module" src="js/ui/MenuUI.js"></script>
     <script type="module" src="main.js"></script> <!-- Main JS file with game logic and setup -->
 </body>
+
 </html>
