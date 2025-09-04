@@ -48,6 +48,9 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         resumeButton.on('pointerdown', () => {
+            const pauseDuration = this.time.now - this.scene.get('RaceScene').pauseStartTime; // calculate pause duration
+            this.scene.get('RaceScene').totalPausedTime += pauseDuration;
+            
             this.scene.stop();            // Stop PauseScene
             this.scene.resume('RaceScene'); // Resume game scene
         });

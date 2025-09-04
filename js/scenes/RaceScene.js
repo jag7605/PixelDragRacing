@@ -44,6 +44,8 @@ export default class RaceScene extends Phaser.Scene {
         }).setOrigin(0, 0);
 
         this.startTime = this.time.now;
+        this.totalPausedTime = 0;
+        this.pauseStartTime = null;
 
         //pause button in top right corner
         this.pauseButton = this.add.image(1230, 50, 'pauseButton')
@@ -61,6 +63,7 @@ export default class RaceScene extends Phaser.Scene {
         });
 
         this.pauseButton.on('pointerdown', () => {
+            this.pauseStartTime = this.time.now; // record when pause started
             this.scene.launch('PauseScene');
             this.scene.bringToTop('PauseScene');
             this.scene.pause();
@@ -277,7 +280,7 @@ export default class RaceScene extends Phaser.Scene {
             `RPM: ${this.playerCar.rpm.toFixed(0)}\n` + // display current RPM
             `Accelerating: ${this.playerCar.isAccelerating ? 'YES' : 'NO'}\n` + // display if accelerating
             `Nitrous: ${this.playerCar.nitrousActive ? 'Active' : this.playerCar.nitrousCooldown > 0 ? 'Cooldown' : 'Ready'}\n` + // display nitrous status
-            `Time: ${((time - this.startTime) / 1000).toFixed(1)}s\n` + // display elapsed time
+            `Time: ${((time - this.startTime - this.totalPausedTime) / 1000).toFixed(1)}s\n` + // display elapsed time excluding pauses
             `Distance: ${this.playerCar.distance.toFixed(0)} m\n` + // display distance traveled
             `Top Speed: ${this.playerCar.topSpeed.toFixed(1)} km/h\n` + // display top speed
             `0-100 Time: ${this.playerCar.zeroToHundredTime ? this.playerCar.zeroToHundredTime.toFixed(2) + 's' : 'N/A'}` // display 0-100 time
