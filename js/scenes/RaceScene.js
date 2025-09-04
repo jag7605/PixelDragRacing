@@ -18,6 +18,7 @@ export default class RaceScene extends Phaser.Scene {
         this.load.image('mphDial', 'assets/Speedometer/MPH.png');
 
         this.load.image('pauseButton', 'assets/ui/buttonImages/pause2.png');// load pause button
+        this.load.audio('buttonSound', 'assets/ui/button_click.mp3');
     }
 
     create() {
@@ -63,6 +64,7 @@ export default class RaceScene extends Phaser.Scene {
         });
 
         this.pauseButton.on('pointerdown', () => {
+            this.sound.play('buttonSound'); // play button sound
             this.pauseStartTime = this.time.now; // record when pause started
             this.scene.launch('PauseScene');
             this.scene.bringToTop('PauseScene');

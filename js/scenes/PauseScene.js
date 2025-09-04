@@ -8,7 +8,8 @@ export default class PauseScene extends Phaser.Scene {
         this.load.image('play', 'assets/ui/buttonImages/play2.png');
         this.load.image('menu', 'assets/ui/buttonImages/settings2.png');
         this.load.image('replay', 'assets/ui/buttonImages/replay2.png');
-        this.load.image('music', 'assets/ui/buttonImages/sound2.png');
+        this.load.image('music', 'assets/ui/buttonImages/music.png');
+        this.load.image('sound', 'assets/ui/buttonImages/sound.png');
         this.load.image('shop', 'assets/ui/buttonImages/shop.png');
         this.load.image('title', 'assets/ui/title.png');
         this.load.image('resume', 'assets/ui/resume.png');
@@ -17,6 +18,7 @@ export default class PauseScene extends Phaser.Scene {
             'assets/ui/font/font.png',
             'assets/ui/font/font.xml'  
         );
+        this.load.audio('buttonSound', 'assets/ui/button_click.mp3');
     }
     create() {
 
@@ -48,6 +50,7 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         resumeButton.on('pointerdown', () => {
+            this.sound.play('buttonSound'); // play button sound
             const pauseDuration = this.time.now - this.scene.get('RaceScene').pauseStartTime; // calculate pause duration
             this.scene.get('RaceScene').totalPausedTime += pauseDuration;
             
@@ -90,6 +93,7 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         menuButton.on('pointerdown', () => {
+            this.sound.play('buttonSound'); // play button sound
             this.scene.stop();            // Stop PauseScene
             this.scene.launch('MenuScene'); // Go to main menu scene
             this.scene.stop('RaceScene'); // Stop game scene
@@ -113,6 +117,7 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         restartButton.on('pointerdown', () => {
+            this.sound.play('buttonSound'); // play button sound
             this.scene.stop();            // Stop PauseScene
             this.scene.launch('RaceScene'); // Restart game scene
         });
@@ -143,6 +148,7 @@ export default class PauseScene extends Phaser.Scene {
 
         //for when we add music
         musicButton.on('pointerdown', () => {
+            this.sound.play('buttonSound'); // play button sound
             // Toggle music on/off
             if (this.sound.mute) {
                 this.sound.mute = false;
@@ -155,10 +161,46 @@ export default class PauseScene extends Phaser.Scene {
             }
         });
 
-        //other button
-        const otherButton = this.add.image(735, 560, 'music')
+        //sound button
+
+        const soundButton = this.add.image(735, 560, 'sound')
             .setOrigin(0.5)
             .setInteractive()
-            .setScale(0.3);
+            .setScale(0.35);
+        
+        //create crossed line for sound off state
+        const soundLine = this.add.graphics();
+        soundLine.lineStyle(5, 0xff0000, 1);
+        soundLine.moveTo(-25, -25);
+        soundLine.lineTo(25, 25);
+        soundLine.strokePath();
+        soundLine.setPosition(soundButton.x, soundButton.y);
+        soundLine.setVisible(this.sound.volume === 0); // only show if sound is off
+
+        // Hover effects
+        soundButton.on('pointerover', () => {
+            soundButton.setTint(0x888888); // darker tint
+        });
+
+        soundButton.on('pointerout', () => {
+            soundButton.clearTint(); // reset
+        });
+
+        soundButton.on('pointerdown', () => {
+            this.sound.play('buttonSound'); // play button sound
+            // Toggle sound effects on/off
+            if (this.sound.volume === 0) {
+                soundLine.setVisible(false); // hide line to indicate sound is on
+                this.sound.setVolume(1);
+                soundButton.clearTint(); // reset tint to indicate sound is on
+            } else {
+                soundLine.setVisible(true); // show line to indicate sound is off
+                this.sound.setVolume(0);
+                soundButton.setTint(0xff0000); // red tint to indicate sound is off
+            }
+        });
+
+        
+
     }
 }
