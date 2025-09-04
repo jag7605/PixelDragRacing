@@ -145,4 +145,12 @@ export default class Car {
     getcurrentGear() {
         return this.gearSystem.currentGear;
     }
+
+    getTopSpeed() {
+        return this.topSpeed.toFixed(1);
+    }
+
+    getZeroToHundredTime() {
+        return this.zeroToHundredTime ? (this.zeroToHundredTime / 1000).toFixed(2) : null; // Convert to seconds and format to 2 decimal places
+    }
 }
