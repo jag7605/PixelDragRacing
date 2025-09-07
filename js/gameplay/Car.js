@@ -41,7 +41,7 @@ export default class Car {
         // Gear shifting
         if (Phaser.Input.Keyboard.JustDown(shiftUpKey)) { // if the shift up key is pressed,
             if (this.gearSystem.shiftUp()) { // shift into the next gear
-                this.rpm *= 0.4; // Drop RPM on upshift (going to a higher gear means lower RPM)
+                this.rpm *= 0.6; // Drop RPM on upshift (going to a higher gear means lower RPM)
                 this.acceleration *= 0.7; // Reduce acceleration curve after upshift
             }
         }
@@ -70,11 +70,22 @@ export default class Car {
         // The acceleration is calculated by multiplying the torque by the gear ratio, which gives a realistic acceleration value based on the current gear.
         this.acceleration = torque * this.gearSystem.getGearRatio();
 
+        // Limit speed based on gear ratio (lower gears allow for more acceleration but less top speed)
+        const maxSpeedPerGear = 290 / this.gearSystem.getGearRatio(); // Slightly increased max speed base
+        // Example: The top speed in gear 1 is 290 / 2.47 = 117.5 km/h, in gear 2 is 290 / 1.85 = 156.8 km/h, etc.
+        if (this.speed > maxSpeedPerGear) this.speed = maxSpeedPerGear;
+
         // Add a subtle bounce effect if RPM exceeds maxRPM
         if (this.rpm >= this.maxRPM) {
             // Subtle visual bounce: vary within ~150 RPM envelope (no gameplay penalty)
             const t = this.scene.time.now * 0.02; // time-based wobble
             this.rpm = this.maxRPM - 150 * Math.abs(Math.sin(t));
+        }
+
+        // add the same bounce effect to speed when at max speed for visual feedback
+        if (this.speed >= maxSpeedPerGear) {
+            const t = this.scene.time.now * 0.02; // time-based wobble
+            this.speed = maxSpeedPerGear - 2 * Math.abs(Math.sin(t)); // small speed wobble 
         }
 
         // Apply nitrous boost if active
@@ -89,21 +100,20 @@ export default class Car {
         // This simulates the car losing power if it goes over the redline RPM which is a common mechanic in racing games.
         // This is a skill element that encourages the player to find the perfect time shift up before hitting the redline to maintain speed.
         if (this.rpm > this.redline && this.gearSystem.currentGear < this.gearSystem.maxGears) {
-            this.acceleration *= 0.4; // Reduce acceleration rate if over redline. (Added further penalty to make it more skillful)
+            this.acceleration *= 0.3; // Reduce acceleration rate if over redline. (Added further penalty to make it more skillful)
         }
 
         // Update speed based on acceleration and whether the car is accelerating (user pressing the up arrow key)
         if (this.isAccelerating) {
             this.speed += this.acceleration * (delta / 1000); // Increase speed based on acceleration and time since last frame
         } else {
-            this.speed *= 0.97; // Slightly increased deceleration for realism
-            // (can play with this value and find a sweet spot later)
+            // Natural deceleration when not accelerating
+            // (changed from previous logic to a more realistic drag-based deceleration)
+            const dragCoeff = 0.0001; // Small coefficient for slow, realistic coasting (can be tuned as needed)
+            const deceleration = dragCoeff * this.speed * delta; // Deceleration proportional to current speed
+            this.speed = Math.max(0, this.speed - deceleration); // Ensure speed doesn't go negative
+            // (can alter dragCoeff for more or less coasting effect, lower value = more coasting, higher value = quicker stop)
         }
-
-        // Limit speed based on gear ratio (lower gears allow for more acceleration but less top speed)
-        const maxSpeedPerGear = 290 / this.gearSystem.getGearRatio(); // Slightly increased max speed base
-        // Example: The top speed in gear 1 is 290 / 2.47 = 117.5 km/h, in gear 2 is 290 / 1.85 = 156.8 km/h, etc.
-        if (this.speed > maxSpeedPerGear) this.speed = maxSpeedPerGear;
 
         // Handle nitrous activation
         if (Phaser.Input.Keyboard.JustDown(nitrousKey) && !this.nitrousActive && this.nitrousCooldown <= 0) { // if the nitrous key is pressed, it isn't already active, and the cooldown is over,
