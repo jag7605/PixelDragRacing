@@ -5,6 +5,32 @@ export default class RaceScene extends Phaser.Scene {
         super('RaceScene');
     }
 
+    startCountdown() {
+        let count = 3;
+        let countdownText = this.add.text(400, 300, count, {
+            fontSize: "80px",
+            color: "#fff",
+            fontStyle: "bold"
+        }).setOrigin(0.5);
+
+        this.time.addEvent({
+            delay: 1000, // every second
+            repeat: 3,   // 3..2..1..GO
+            callback: () => {
+                if (count > 1) {
+                    count--;
+                    countdownText.setText(count);
+                } else if (count === 1) {
+                    count = 0;
+                    countdownText.setText("GO!");
+                } else {
+                    countdownText.destroy();
+                    this.raceStarted = true; // 🚦 start race now
+                }
+            }
+        });
+    }
+
     preload() {
         this.load.image('sky', 'assets/backgrounds/sky_day_1440x1080.png'); // load sky background
         this.load.image('road', 'assets/backgrounds/road_tile_256px.png'); // load road background
@@ -19,6 +45,9 @@ export default class RaceScene extends Phaser.Scene {
 
         this.load.image('pauseButton', 'assets/ui/buttonImages/pause2.png');// load pause button
         this.load.audio('buttonSound', 'assets/ui/button_click.mp3');
+
+        // load Finish_Line to the game
+        this.load.image('finishLine', 'assets/backgrounds/Finish_Line.png');
     }
 
     create() {
@@ -31,7 +60,6 @@ export default class RaceScene extends Phaser.Scene {
             frameRate: 24,
             repeat: -1
         });
-
         this.cursors = this.input.keyboard.createCursorKeys(); // create cursor keys for input
         this.shiftUpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E); // key for shifting up
         this.shiftDownKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q); // key for shifting down
@@ -44,9 +72,8 @@ export default class RaceScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0, 0);
 
-        this.startTime = this.time.now;
-        this.totalPausedTime = 0;
-        this.pauseStartTime = null;
+        this.raceStarted = false;
+        this.startCountdown();
 
         //pause button in top right corner
         this.pauseButton = this.add.image(1230, 50, 'pauseButton')
@@ -94,7 +121,7 @@ export default class RaceScene extends Phaser.Scene {
         graphics.fillPath();
 
         // add the word "GEAR" above the gear indicator
-        this.add.text(405, 670, 'GEAR', {
+        this.GEAR = this.add.text(405, 670, 'GEAR', {
             fontFamily: 'Digital7',
             fontSize: '15px',
             fill: '#ffffff',
@@ -144,7 +171,7 @@ export default class RaceScene extends Phaser.Scene {
             let x = MPHcenterX + MPHradius * Math.cos(angleRad);
             let y = MPHcenterY + MPHradius * Math.sin(angleRad);
 
-            this.add.text(x, y, value.toString(), { fontSize: "10px", color: "#fff" }).setOrigin(0.5);
+            this.add.text(x, y, value.toString(), { fontSize: "10px", color: "#fff" }).setOrigin(0.5).setDepth(5);
 
             // Draw tick line
             let innerRadius = MPHradius + 15; // start of line (closer to center)
@@ -157,7 +184,8 @@ export default class RaceScene extends Phaser.Scene {
                 MPHcenterY + innerRadius * Math.sin(angleRad));
             tick.lineTo(MPHcenterX + outerRadius * Math.cos(angleRad),
                 MPHcenterY + outerRadius * Math.sin(angleRad));
-            tick.strokePath();
+            tick.strokePath()
+            tick.setDepth(5);
         }
 
         // Draw redline arc on RPM dial (8.5k to 10k)
@@ -179,7 +207,8 @@ export default class RaceScene extends Phaser.Scene {
         redline.beginPath();
         let redlineRadius = RPMradius + 12; // push arc further outside the numbers
         redline.arc(RPMcenterX, RPMcenterY, redlineRadius, startAngle, endAngle, false);
-        redline.strokePath();
+        redline.strokePath()
+        redline.setDepth(5);
 
         // ---place down RPM numbers in a circular pattern---
         for (let i = 0; i <= RPMsteps; i++) {
@@ -192,7 +221,7 @@ export default class RaceScene extends Phaser.Scene {
 
             let color = (i >= RPMsteps - 1) ? "#ff0000" : "#ffffff";
 
-            this.add.text(x, y, value.toString(), { fontSize: "15px", color: color }).setOrigin(0.5);
+            this.add.text(x, y, value.toString(), { fontSize: "15px", color: color }).setOrigin(0.5).setDepth(5);
 
             // Draw tick line
             let innerRadius = RPMradius + 20;
@@ -205,7 +234,8 @@ export default class RaceScene extends Phaser.Scene {
                 RPMcenterY + innerRadius * Math.sin(angleRad));
             tick.lineTo(RPMcenterX + outerRadius * Math.cos(angleRad),
                 RPMcenterY + outerRadius * Math.sin(angleRad));
-            tick.strokePath();
+            tick.strokePath()
+            tick.setDepth(5);
         }
 
 
@@ -216,7 +246,7 @@ export default class RaceScene extends Phaser.Scene {
         this.mphNeedle.moveTo(0, 0);   // needle base (center of dial)
         this.mphNeedle.lineTo(60, 0); // needle length (points upward)
         this.mphNeedle.strokePath();
-        this.Gaugebackground = this.add.circle(750, 620, 10, 0x333333);
+        this.mphCircle = this.add.circle(750, 620, 10, 0x333333);
 
         // Position needle at center of MPH dial
         this.mphNeedle.x = MPHcenterX;
@@ -268,9 +298,36 @@ export default class RaceScene extends Phaser.Scene {
             stroke: '#000000',
             strokeThickness: 8
         }).setOrigin(0.5);
+
+        // Place finish line off-screen to the right
+        this.finishDistance = 400; // meters until finish line
+        this.finishLine = this.add.image(1280, 300, 'finishLine').setOrigin(0, 0);
+        this.finishLine.visible = false; // hidden until we reach it
+
+        // Depth layers
+        this.sky.setDepth(-1);
+        this.road.setDepth(0);
+        this.finishLine.setDepth(1);
+        this.playerCar.sprite.setDepth(2);  // <-- IMPORTANT
+        this.rpmDial.setDepth(3);
+        this.mphDial.setDepth(3);
+        this.speedText.setDepth(3);
+        this.rpmNeedle.setDepth(4);
+        this.mphNeedle.setDepth(4);
+        this.shiftLight.setDepth(4);
+        this.getcurrentGear.setDepth(4);
+        this.Gaugebackground.setDepth(3);
+        graphics.setDepth(2);
+        this.pauseButton.setDepth(4);
+        this.hudText.setDepth(4);
+        this.GEAR.setDepth(4);
+        this.rpmCircle.setDepth(4);
+        this.mphCircle.setDepth(4);
     }
 
     update(time, delta) { // update method called every frame
+        if (!this.raceStarted) return;
+
         this.road.tilePositionX += this.playerCar.speed * 0.15; // scroll the road background based on car speed
         this.sky.tilePositionX += this.playerCar.speed * 0.02; // scroll the sky background based on car speed
 
@@ -308,5 +365,26 @@ export default class RaceScene extends Phaser.Scene {
 
         // Update speed text
         this.speedText.setText(this.playerCar.speed.toFixed(0));
+
+        // Show finish line when player has driven close enough
+        if (this.playerCar.distance >= this.finishDistance - 200) {
+            this.finishLine.visible = true;
+        }
+
+        // Move finish line relative to road scroll
+        if (this.finishLine.visible) {
+            this.finishLine.x -= this.playerCar.speed * 0.15 * (delta / 16.67);
+        }
+
+        // Check if car "crossed" the finish line
+        if (this.finishLine.visible && this.finishLine.x <= this.playerCar.x + 100) {
+            console.log("Race Finished!");
+            this.raceOver();
+        }
+
+        // check if the scrolling finish line has moved past the player car go to end scene
+        if (this.finishLine.x + this.finishLine.width < 0) {
+            this.scene.start('EndScene');
+        }
     }
 }
