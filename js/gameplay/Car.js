@@ -7,10 +7,6 @@ export default class Car {
         this.scene = scene; // Reference to the Phaser scene
         this.sprite = scene.add.sprite(x, y, 'car').setScale(1); // Create the car sprite at position (x, y) using the 'car' sprite sheet
 
-        if (scene.anims.exists('drive')) { // if the 'drive' animation exists in the scene,
-            this.sprite.play('drive'); // play the 'drive' animation on the car sprite
-        }
-
         // Set initial car properties
         this.speed = 0; // Initial speed of the car set to 0
         this.gearSystem = new GearSystem(); // Create a new instance of the GearSystem to manage the car's gears
@@ -37,6 +33,21 @@ export default class Car {
     // shiftUpKey and shiftDownKey are for gear shifting, nitrousKey for boost, elapsed for timing stats
     update(delta, cursors, shiftUpKey, shiftDownKey, nitrousKey, elapsed) {
         if (!cursors || !cursors.up) return; // If cursors or the up key is not defined, exit the update method early to prevent errors.
+
+        // play the drive animation only if the car is moving (speed > 0)
+        if (this.speed > 0) {
+            if (!this.sprite.anims.isPlaying || this.sprite.anims.currentAnim.key !== 'drive') {
+                if (this.scene.anims.exists('drive')) { // Check if the 'drive' animation exists
+                    this.sprite.play('drive'); // Play the 'drive' animation
+                }
+            }
+        }
+        
+        // increase the animation speed based on the car's speed for a more dynamic effect
+        if (this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key === 'drive') {
+            const animSpeed = Phaser.Math.Clamp(this.speed / 100, 0.5, 3); // Clamp animation speed between 0.5 and 3
+            this.sprite.anims.msPerFrame = 1000 / (10 * animSpeed); // Adjust msPerFrame based on speed
+        }
 
         // Gear shifting
         if (Phaser.Input.Keyboard.JustDown(shiftUpKey)) { // if the shift up key is pressed,
@@ -139,6 +150,18 @@ export default class Car {
 
         // Track distance traveled (will be used to set race length later)
         this.distance += this.speed * (delta / 1000);
+
+        // add screen shake effect when nitrous is active for visual feedback
+        if (this.nitrousActive) {
+            const intensity = 0.005; // Reduced intensity for a more subtle effect
+            this.scene.cameras.main.shake(50, intensity); // Short, subtle shake
+        }
+        
+        // add gradual screen shake based on speed for immersion, capped at high speeds to avoid excessive shaking
+        const speedShakeIntensity = Math.min(this.speed / 30000, 0.001); // Capped intensity
+        if (speedShakeIntensity > 0) {
+            this.scene.cameras.main.shake(50, speedShakeIntensity); // screen shake based on speed
+        }
     }
 
     // Method to get current speed for HUD
@@ -146,7 +169,7 @@ export default class Car {
         return this.speed.toFixed(1);
     }
 
-    // Method to get current RPM for HUD
+    // Method to get current RPM for HUD 
     getRPM() {
         return this.rpm.toFixed(0);
     }
