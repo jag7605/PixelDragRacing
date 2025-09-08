@@ -44,7 +44,8 @@ export default class RaceScene extends Phaser.Scene {
         this.load.image('mphDial', 'assets/Speedometer/MPH.png');
 
         this.load.image('pauseButton', 'assets/ui/buttonImages/pause2.png');// load pause button
-        this.load.audio('buttonSound', 'assets/ui/button_click.mp3');
+        this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
+        this.load.audio('bgMusic', 'assets/sound/bgMusic.mp3'); // load temp background music
 
         // load Finish_Line to the game
         this.load.image('finishLine', 'assets/backgrounds/Finish_Line.png');
@@ -53,6 +54,23 @@ export default class RaceScene extends Phaser.Scene {
     create() {
         this.sky = this.add.tileSprite(0, 0, 1280, 720, 'sky').setOrigin(0, 0); // create sky background
         this.road = this.add.tileSprite(0, 300, 1280, 256, 'road').setOrigin(0, 0); // create road background
+
+        // Add and play background music
+        
+        // only create bgMusic instance if it doesn't already exist
+        if (this.registry.get('bgMusic') === undefined) {
+            const bgMusic = this.sound.add('bgMusic', { volume: 0.5, loop: true });
+            this.registry.set('bgMusic', bgMusic);
+        }
+
+        // get the bgMusic instance from the registry
+        this.bgMusic = this.registry.get('bgMusic');
+        this.bgMusic.play();
+
+        // pause music if muted
+        if (this.registry.get('musicMuted') && this.bgMusic.isPlaying) {
+            this.bgMusic.pause();
+        }
 
         this.anims.create({ // create car animation
             key: 'drive',
@@ -91,7 +109,8 @@ export default class RaceScene extends Phaser.Scene {
         });
 
         this.pauseButton.on('pointerdown', () => {
-            this.sound.play('buttonSound'); // play button sound
+            // play sound effect only if not muted
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
             this.pauseStartTime = this.time.now; // record when pause started
             this.scene.launch('PauseScene');
             this.scene.bringToTop('PauseScene');

@@ -18,7 +18,7 @@ export default class PauseScene extends Phaser.Scene {
             'assets/ui/font/font.png',
             'assets/ui/font/font.xml'  
         );
-        this.load.audio('buttonSound', 'assets/ui/button_click.mp3');
+        this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
     }
     create() {
 
@@ -33,6 +33,16 @@ export default class PauseScene extends Phaser.Scene {
 
         // paused text
         this.add.bitmapText(645, 155, 'pixelFont', 'PAUSED', 40).setOrigin(0.5);
+
+        const raceScene = this.scene.get('RaceScene');
+
+        if (this.registry.get('sfxMuted') === undefined) {
+            this.registry.set('sfxMuted', false);
+        }
+
+        if (this.registry.get('musicMuted') === undefined) {
+            this.registry.set('musicMuted', false);
+        }
 
         //large resume button
         const resumeButton = this.add.image(640, 440, 'resume')
@@ -50,7 +60,8 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         resumeButton.on('pointerdown', () => {
-            this.sound.play('buttonSound'); // play button sound
+            // play sound effect only if not muted
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
             const pauseDuration = this.time.now - this.scene.get('RaceScene').pauseStartTime; // calculate pause duration
             this.scene.get('RaceScene').totalPausedTime += pauseDuration;
             
@@ -93,7 +104,12 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         menuButton.on('pointerdown', () => {
-            this.sound.play('buttonSound'); // play button sound
+            // play sound effect only if not muted
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            //stop music
+            if (raceScene.bgMusic) {
+                raceScene.bgMusic.stop();
+            }
             this.scene.stop();            // Stop PauseScene
             this.scene.launch('MenuScene'); // Go to main menu scene
             this.scene.stop('RaceScene'); // Stop game scene
@@ -117,7 +133,12 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         restartButton.on('pointerdown', () => {
-            this.sound.play('buttonSound'); // play button sound
+            // play sound effect only if not muted
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            //stop music
+            if (raceScene.bgMusic) {
+                raceScene.bgMusic.stop();
+            }
             this.scene.stop();            // Stop PauseScene
             this.scene.launch('RaceScene'); // Restart game scene
         });
@@ -135,7 +156,9 @@ export default class PauseScene extends Phaser.Scene {
         line.lineTo(25, 25);
         line.strokePath();
         line.setPosition(musicButton.x, musicButton.y);
-        line.setVisible(this.sound.mute); // only show if music is off
+       //set to true is music is paused
+        let musicMuted = this.registry.get('musicMuted');
+        line.setVisible(musicMuted);
 
         // Hover effects
         musicButton.on('pointerover', () => {
@@ -148,16 +171,22 @@ export default class PauseScene extends Phaser.Scene {
 
         //for when we add music
         musicButton.on('pointerdown', () => {
-            this.sound.play('buttonSound'); // play button sound
-            // Toggle music on/off
-            if (this.sound.mute) {
-                this.sound.mute = false;
-                line.setVisible(false); // hide line to indicate music is on
-                musicButton.clearTint(); // reset tint to indicate music is on
-            } else {
-                this.sound.mute = true;
-                line.setVisible(true); // show line to indicate music is off
-                musicButton.setTint(0xff0000); // red tint to indicate music is off
+            // play sound effect only if not muted
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+
+            musicMuted = !musicMuted;
+            this.registry.set('musicMuted', musicMuted);
+
+            if (raceScene.bgMusic) {
+                if (musicMuted) {
+                    raceScene.bgMusic.pause();
+                    line.setVisible(true);  // show cross line
+                    musicButton.setTint(0xff0000);
+                } else {
+                    raceScene.bgMusic.resume();
+                    line.setVisible(false); 
+                    musicButton.clearTint();
+                }
             }
         });
 
@@ -175,7 +204,9 @@ export default class PauseScene extends Phaser.Scene {
         soundLine.lineTo(25, 25);
         soundLine.strokePath();
         soundLine.setPosition(soundButton.x, soundButton.y);
-        soundLine.setVisible(this.sound.volume === 0); // only show if sound is off
+        const sfxMuted = this.registry.get('sfxMuted');
+        soundLine.setVisible(sfxMuted);
+
 
         // Hover effects
         soundButton.on('pointerover', () => {
@@ -187,16 +218,17 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         soundButton.on('pointerdown', () => {
-            this.sound.play('buttonSound'); // play button sound
-            // Toggle sound effects on/off
-            if (this.sound.volume === 0) {
-                soundLine.setVisible(false); // hide line to indicate sound is on
-                this.sound.setVolume(1);
-                soundButton.clearTint(); // reset tint to indicate sound is on
+            // play sound effect only if not muted
+            const muted = !this.registry.get('sfxMuted');
+            this.registry.set('sfxMuted', muted);
+
+            // Toggle line and tint
+            if (muted) {
+                soundLine.setVisible(true);
+                soundButton.setTint(0xff0000);
             } else {
-                soundLine.setVisible(true); // show line to indicate sound is off
-                this.sound.setVolume(0);
-                soundButton.setTint(0xff0000); // red tint to indicate sound is off
+                soundLine.setVisible(false);
+                soundButton.clearTint();
             }
         });
 
