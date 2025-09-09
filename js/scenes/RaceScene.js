@@ -414,4 +414,33 @@ export default class RaceScene extends Phaser.Scene {
             this.scene.start('EndScene');
         }
     }
+    raceOver(time) {
+        if (this.raceEnded) return; // prevent multiple calls
+        this.raceEnded = true;
+
+        const finalTime = (time - this.startTime - this.totalPausedTime) / 1000;
+
+        this.registry.set('finalTime', finalTime);
+        this.registry.set('topSpeed', this.playerCar?.topSpeed || 0);
+        this.registry.set('zeroToHundredTime', this.playerCar?.zeroToHundredTime ?? null);
+        this.registry.set('youWin', true);
+        
+    }
+
+    resetRace() {
+        this.raceStarted = false;
+        this.raceEnded = false;
+        this.startTime = 0;
+        this.totalPausedTime = 0;
+
+        // Reset finish line
+        this.finishLine.x = 1280;
+        this.finishLine.visible = false;
+
+        // Reset registry values
+        this.registry.set('finalTime', 0);
+        this.registry.set('topSpeed', 0);
+        this.registry.set('zeroToHundredTime', null);
+        this.registry.set('youWin', false);
+    }
 }
