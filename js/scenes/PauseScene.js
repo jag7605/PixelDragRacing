@@ -62,9 +62,13 @@ export default class PauseScene extends Phaser.Scene {
         resumeButton.on('pointerdown', () => {
             // play sound effect only if not muted
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-            const pauseDuration = this.time.now - this.scene.get('RaceScene').pauseStartTime; // calculate pause duration
-            this.scene.get('RaceScene').totalPausedTime += pauseDuration;
             
+            //if the game has started, update totalPausedTime
+            if (raceScene.raceStarted) {
+                const pauseDuration = this.time.now - this.scene.get('RaceScene').pauseStartTime; // calculate pause duration
+                this.scene.get('RaceScene').totalPausedTime += pauseDuration;
+            }
+
             this.scene.stop();            // Stop PauseScene
             this.scene.resume('RaceScene'); // Resume game scene
         });

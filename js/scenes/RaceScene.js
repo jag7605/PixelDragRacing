@@ -26,6 +26,7 @@ export default class RaceScene extends Phaser.Scene {
                 } else {
                     countdownText.destroy();
                     this.raceStarted = true; // 🚦 start race now
+                    this.startTime = this.time.now; // record start time
                 }
             }
         });
@@ -91,6 +92,9 @@ export default class RaceScene extends Phaser.Scene {
         }).setOrigin(0, 0);
 
         this.raceStarted = false;
+        this.startTime = 0;
+        this.totalPausedTime = 0;
+        this.pauseStartTime = 0;
         this.startCountdown();
 
         //pause button in top right corner
@@ -111,7 +115,10 @@ export default class RaceScene extends Phaser.Scene {
         this.pauseButton.on('pointerdown', () => {
             // play sound effect only if not muted
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-            this.pauseStartTime = this.time.now; // record when pause started
+            //if the game has started, record the time when paused
+            if (this.raceStarted){
+                this.pauseStartTime = this.time.now; // record when pause started
+            }
             this.scene.launch('PauseScene');
             this.scene.bringToTop('PauseScene');
             this.scene.pause();
@@ -350,7 +357,7 @@ export default class RaceScene extends Phaser.Scene {
         this.road.tilePositionX += this.playerCar.speed * 0.15; // scroll the road background based on car speed
         this.sky.tilePositionX += this.playerCar.speed * 0.02; // scroll the sky background based on car speed
 
-        this.playerCar.update(delta, this.cursors, this.shiftUpKey, this.shiftDownKey, this.nitrousKey, (time - this.startTime) / 1000);
+        this.playerCar.update(delta, this.cursors, this.shiftUpKey, this.shiftDownKey, this.nitrousKey, (time - this.startTime - this.totalPausedTime) / 1000);
 
         this.hudText.setText(
             `Gear: ${this.playerCar.gearSystem.currentGear}\n` + // display current gear
@@ -398,11 +405,12 @@ export default class RaceScene extends Phaser.Scene {
         // Check if car "crossed" the finish line
         if (this.finishLine.visible && this.finishLine.x <= this.playerCar.x + 100) {
             console.log("Race Finished!");
-            this.raceOver();
+            this.raceOver(time);
         }
 
         // check if the scrolling finish line has moved past the player car go to end scene
         if (this.finishLine.x + this.finishLine.width < 0) {
+            this.raceOver(time);
             this.scene.start('EndScene');
         }
     }
