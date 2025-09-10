@@ -9,7 +9,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
 
         //Buttons
-        this.load.image('start_btn', 'assets/backgrounds/start_btn.png'); 
+        this.load.image('start_btn', 'assets/ui/buttonImages/start_btn.png'); 
         this.load.image('steeringWheel', 'assets/steering_wheel.png');
         this.load.image('wrench', 'assets/wrench.png');
     }
