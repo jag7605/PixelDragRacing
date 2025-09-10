@@ -6,6 +6,7 @@ import MenuScene from './js/scenes/MenuScene.js';
 import PauseScene from './js/scenes/PauseScene.js';
 import RaceScene from './js/scenes/RaceScene.js';
 
+
 // Phaser game configuration (preserving your prototype settings)
 const config = {
     type: Phaser.AUTO, // Let Phaser choose the best renderer (WebGL or Canvas)
