@@ -52,6 +52,11 @@ export default class RaceScene extends Phaser.Scene {
     }
 
     create() {
+        this.playerCar = new Car(this, 150, 410);
+        this.botCar = new Bot(this, 150, 310, 0.1);
+
+        this.resetRace();   // safe now, because cars exist
+
         // === Track length (in px) ===
         this.trackLength = 2500;
 
@@ -377,7 +382,7 @@ export default class RaceScene extends Phaser.Scene {
             `Top Speed: ${this.playerCar.topSpeed.toFixed(1)} km/h\n` +
             `0-100 Time: ${this.playerCar.zeroToHundredTime ? this.playerCar.zeroToHundredTime.toFixed(2) + 's' : 'N/A'}`
         );
-        
+
         // Update MPH needle
         let speedAngle = Phaser.Math.Linear(-225, 45, Phaser.Math.Clamp(this.playerCar.speed / 280, 0, 1));
         this.mphNeedle.setRotation(Phaser.Math.DegToRad(speedAngle));
@@ -430,6 +435,8 @@ export default class RaceScene extends Phaser.Scene {
         this.startTime = 0;
         this.totalPausedTime = 0;
 
+        this.playerCar.distance = 0;
+        this.botCar.distance = 0;
         this.playerCar.sprite.x = 150;
         this.botCar.sprite.x = 150;
 
