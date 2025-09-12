@@ -6,7 +6,7 @@ export default class Car {
     constructor(scene, x, y) { // scene is the Phaser scene, x and y are the initial position of the car
         this.scene = scene; // Reference to the Phaser scene
         this.sprite = scene.add.sprite(x, y, 'car').setScale(1); // Create the car sprite at position (x, y) using the 'car' sprite sheet
-        
+
         // Set initial car properties
         this.speed = 0; // Initial speed of the car set to 0
         this.gearSystem = new GearSystem(); // Create a new instance of the GearSystem to manage the car's gears
@@ -15,25 +15,25 @@ export default class Car {
         this.redline = 8500; // RPM at which the car starts to lose power (user would have to shift up before this to avoid this which adds a skill element)
         this.acceleration = 0; // Initial acceleration set to 0
         this.isAccelerating = false; // Flag to check if the car is accelerating
-        
+
         // Set nitrous speed boost properties
         this.nitrousActive = false; // Flag to check if nitrous is active
         this.nitrousDuration = 3000; // Nitrous lasts for 3 seconds. (I will most likey adjust this later and find a sweet spot)
         this.nitrousCooldown = 0; // Cooldown time after using nitrous (will adjust further down)
         this.nitrousBoost = 1.8; // Increased speed multiplier for more noticeable boost
-        
+
         // Set up basic stats tracking
         this.zeroToHundredTime = null; // Time taken to go from 0 to 100 km/h (kept null until achieved)
         this.topSpeed = 0; // Track the top speed achieved
         this.distance = 0; // Track distance traveled
     }
-    
+
     // This method updates the car's position and speed based on input
     // delta is the time since the last frame in milliseconds, cursors is the input for movement, 
     // shiftUpKey and shiftDownKey are for gear shifting, nitrousKey for boost, elapsed for timing stats
     update(delta, cursors, shiftUpKey, shiftDownKey, nitrousKey, elapsed) {
         if (!cursors || !cursors.up) return; // If cursors or the up key is not defined, exit the update method early to prevent errors.
-        
+
         // play the drive animation only if the car is moving (speed > 0)
         if (this.speed > 0) {
             if (!this.sprite.anims.isPlaying || this.sprite.anims.currentAnim.key !== 'drive') {
@@ -85,7 +85,7 @@ export default class Car {
         const maxSpeedPerGear = 290 / this.gearSystem.getGearRatio(); // Slightly increased max speed base
         // Example: The top speed in gear 1 is 290 / 2.47 = 117.5 km/h, in gear 2 is 290 / 1.85 = 156.8 km/h, etc.
         if (this.speed > maxSpeedPerGear) this.speed = maxSpeedPerGear;
-        
+
         // Add a subtle bounce effect if RPM exceeds maxRPM
         if (this.rpm >= this.maxRPM) {
             // Subtle visual bounce: vary within ~150 RPM envelope (no gameplay penalty)
@@ -165,45 +165,58 @@ export default class Car {
             }
         }
 
-        // add horizontal speed lines for visual speed feedback 
+        // Add horizontal speed lines for visual speed feedback
         if (this.speed > 100) {
-            const lineCount = Math.min(Math.floor(this.speed / 50), 10); // More lines with speed
+            const lineCount = Math.min(Math.floor(this.speed / 50), 10); // More lines with speed, capped at 10
             for (let i = 0; i < lineCount; i++) {
                 const lineY = Phaser.Math.Between(0, this.scene.scale.height); // Random Y position
+                const screenLeftX = this.scene.cameras.main.getWorldPoint(0, 0).x; // Left edge of camera in world coordinates
+                const screenRightX = this.scene.cameras.main.getWorldPoint(this.scene.scale.width, 0).x; // Right edge of camera
+                const lineWidth = 0.25 * this.scene.scale.width; // set the line width
                 const line = this.scene.add.rectangle(
-                    Phaser.Math.Between(0, 1280), // Random X start position
-                    lineY,
-                    Phaser.Math.Between(20, 100), // Random length
-                    2,
-                    0xffffff,
+                    screenRightX, // Spawn at far right edge of camera
+                    lineY, // Random Y position
+                    lineWidth, // set the line width
+                    1, // Thin line for subtle effect
+                    0xffffff, // White color for visibility (windshield streak effect)
                     Phaser.Math.FloatBetween(0.1, 0.3) // Random opacity for depth effect
                 ).setOrigin(0, 0.5);
+                const baseDuration = 600; // Base duration in ms
+                const speedFactor = Math.max(100, this.speed); // Minimum 100 km/h to avoid division by zero
+                const duration = baseDuration * (100 / speedFactor); // Shorter duration with higher speed
                 this.scene.tweens.add({
                     targets: line,
-                    x: -line.width, // Move left off-screen
-                    duration: Phaser.Math.Between(300, 600), // Speed based on random duration
+                    x: screenLeftX - lineWidth, // Move to off-screen left
+                    duration: Phaser.Math.Between(duration * 0.8, duration * 1.2), // Slight random variation
                     ease: 'Linear',
                     onComplete: () => line.destroy() // Remove line after animation
                 });
             }
         }
-        // add more horizontal speed lines if nitrous is active for extra effect
+
+        // Add more horizontal speed lines if nitrous is active for extra effect (these lines are longer and more visible)
         if (this.nitrousActive) {
             const nitrousLineCount = 3; // Fixed number of lines for nitrous effect
             for (let i = 0; i < nitrousLineCount; i++) {
                 const lineY = Phaser.Math.Between(300, this.scene.scale.height); // Random Y position
+                const screenLeftX = this.scene.cameras.main.getWorldPoint(0, 0).x; // Left edge of camera in world coordinates
+                const screenRightX = this.scene.cameras.main.getWorldPoint(this.scene.scale.width, 0).x; // Right edge of camera
+                const lineWidth = 0.5 * this.scene.scale.width; // 75% of screen width for shorter lines
                 const line = this.scene.add.rectangle(
-                    Phaser.Math.Between(0, 1280), // Random X start position
+                    screenRightX, // Spawn at far right edge of camera
                     lineY,
-                    Phaser.Math.Between(50, 150), // Longer lines for nitrous
-                    3,
-                    0x00ffff,
+                    lineWidth,
+                    2, 
+                    0xffffff, 
                     Phaser.Math.FloatBetween(0.2, 0.5) // Slightly higher opacity for visibility
                 ).setOrigin(0, 0.5);
+                const baseDuration = 400; // Base duration for nitrous
+                const speedFactor = Math.max(100, this.speed); // Minimum 100 km/h
+                const duration = baseDuration * (100 / speedFactor); // Faster with higher speed
                 this.scene.tweens.add({
                     targets: line,
-                    x: -line.width, // Move left off-screen
-                    duration: Phaser.Math.Between(200, 400), // Faster speed for nitrous effect
+                    x: screenLeftX - lineWidth, // Move to off-screen left
+                    duration: Phaser.Math.Between(duration * 0.8, duration * 1.2), // Slight random variation
                     ease: 'Linear',
                     onComplete: () => line.destroy() // Remove line after animation
                 });
