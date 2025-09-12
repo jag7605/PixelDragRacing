@@ -6,7 +6,7 @@ export default class Car {
     constructor(scene, x, y) { // scene is the Phaser scene, x and y are the initial position of the car
         this.scene = scene; // Reference to the Phaser scene
         this.sprite = scene.add.sprite(x, y, 'car').setScale(1); // Create the car sprite at position (x, y) using the 'car' sprite sheet
-
+        
         // Set initial car properties
         this.speed = 0; // Initial speed of the car set to 0
         this.gearSystem = new GearSystem(); // Create a new instance of the GearSystem to manage the car's gears
@@ -15,25 +15,25 @@ export default class Car {
         this.redline = 8500; // RPM at which the car starts to lose power (user would have to shift up before this to avoid this which adds a skill element)
         this.acceleration = 0; // Initial acceleration set to 0
         this.isAccelerating = false; // Flag to check if the car is accelerating
-
+        
         // Set nitrous speed boost properties
         this.nitrousActive = false; // Flag to check if nitrous is active
         this.nitrousDuration = 3000; // Nitrous lasts for 3 seconds. (I will most likey adjust this later and find a sweet spot)
         this.nitrousCooldown = 0; // Cooldown time after using nitrous (will adjust further down)
         this.nitrousBoost = 1.8; // Increased speed multiplier for more noticeable boost
-
+        
         // Set up basic stats tracking
         this.zeroToHundredTime = null; // Time taken to go from 0 to 100 km/h (kept null until achieved)
         this.topSpeed = 0; // Track the top speed achieved
         this.distance = 0; // Track distance traveled
     }
-
+    
     // This method updates the car's position and speed based on input
     // delta is the time since the last frame in milliseconds, cursors is the input for movement, 
     // shiftUpKey and shiftDownKey are for gear shifting, nitrousKey for boost, elapsed for timing stats
     update(delta, cursors, shiftUpKey, shiftDownKey, nitrousKey, elapsed) {
         if (!cursors || !cursors.up) return; // If cursors or the up key is not defined, exit the update method early to prevent errors.
-
+        
         // play the drive animation only if the car is moving (speed > 0)
         if (this.speed > 0) {
             if (!this.sprite.anims.isPlaying || this.sprite.anims.currentAnim.key !== 'drive') {
@@ -42,7 +42,7 @@ export default class Car {
                 }
             }
         }
-        
+
         // increase the animation speed based on the car's speed for a more dynamic effect
         if (this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key === 'drive') {
             const animSpeed = Phaser.Math.Clamp(this.speed / 100, 0.5, 3); // Clamp animation speed between 0.5 and 3
@@ -85,7 +85,7 @@ export default class Car {
         const maxSpeedPerGear = 290 / this.gearSystem.getGearRatio(); // Slightly increased max speed base
         // Example: The top speed in gear 1 is 290 / 2.47 = 117.5 km/h, in gear 2 is 290 / 1.85 = 156.8 km/h, etc.
         if (this.speed > maxSpeedPerGear) this.speed = maxSpeedPerGear;
-
+        
         // Add a subtle bounce effect if RPM exceeds maxRPM
         if (this.rpm >= this.maxRPM) {
             // Subtle visual bounce: vary within ~150 RPM envelope (no gameplay penalty)
@@ -156,14 +156,60 @@ export default class Car {
             const intensity = 0.005; // Reduced intensity for a more subtle effect
             this.scene.cameras.main.shake(50, intensity); // Short, subtle shake
         }
-        
+
         // add gradual screen shake based on speed for immersion, capped at high speeds to avoid excessive shaking
-        const speedShakeIntensity = Math.min(this.speed / 30000, 0.001); // Capped intensity
+        const speedShakeIntensity = Math.min(this.speed / 30000, 0.00075); // Capped intensity
         if (speedShakeIntensity > 0) {
-            this.scene.cameras.main.shake(50, speedShakeIntensity); // screen shake based on speed
+            if (this.speed > 50) {
+                this.scene.cameras.main.shake(25, speedShakeIntensity); // Very subtle shake
+            }
+        }
+
+        // add horizontal speed lines for visual speed feedback 
+        if (this.speed > 100) {
+            const lineCount = Math.min(Math.floor(this.speed / 50), 10); // More lines with speed
+            for (let i = 0; i < lineCount; i++) {
+                const lineY = Phaser.Math.Between(0, this.scene.scale.height); // Random Y position
+                const line = this.scene.add.rectangle(
+                    Phaser.Math.Between(0, 1280), // Random X start position
+                    lineY,
+                    Phaser.Math.Between(20, 100), // Random length
+                    2,
+                    0xffffff,
+                    Phaser.Math.FloatBetween(0.1, 0.3) // Random opacity for depth effect
+                ).setOrigin(0, 0.5);
+                this.scene.tweens.add({
+                    targets: line,
+                    x: -line.width, // Move left off-screen
+                    duration: Phaser.Math.Between(300, 600), // Speed based on random duration
+                    ease: 'Linear',
+                    onComplete: () => line.destroy() // Remove line after animation
+                });
+            }
+        }
+        // add more horizontal speed lines if nitrous is active for extra effect
+        if (this.nitrousActive) {
+            const nitrousLineCount = 3; // Fixed number of lines for nitrous effect
+            for (let i = 0; i < nitrousLineCount; i++) {
+                const lineY = Phaser.Math.Between(300, this.scene.scale.height); // Random Y position
+                const line = this.scene.add.rectangle(
+                    Phaser.Math.Between(0, 1280), // Random X start position
+                    lineY,
+                    Phaser.Math.Between(50, 150), // Longer lines for nitrous
+                    3,
+                    0x00ffff,
+                    Phaser.Math.FloatBetween(0.2, 0.5) // Slightly higher opacity for visibility
+                ).setOrigin(0, 0.5);
+                this.scene.tweens.add({
+                    targets: line,
+                    x: -line.width, // Move left off-screen
+                    duration: Phaser.Math.Between(200, 400), // Faster speed for nitrous effect
+                    ease: 'Linear',
+                    onComplete: () => line.destroy() // Remove line after animation
+                });
+            }
         }
     }
-
     // Method to get current speed for HUD
     getSpeed() {
         return this.speed.toFixed(1);
@@ -179,11 +225,31 @@ export default class Car {
         return this.gearSystem.currentGear;
     }
 
+    // Method to get top speed for stats
     getTopSpeed() {
         return this.topSpeed.toFixed(1);
     }
 
+    // Method to get 0-100 time for stats
     getZeroToHundredTime() {
         return this.zeroToHundredTime ? (this.zeroToHundredTime / 1000).toFixed(2) : null; // Convert to seconds and format to 2 decimal places
+    }
+
+    // Method to get distance traveled for stats
+    getDistance() {
+        return this.distance.toFixed(1); // Distance traveled formatted to 1 decimal place
+    }
+
+    // Method to reset car properties on race restart
+    reset() {
+        this.speed = 0; // reset speed to 0
+        this.gearSystem.reset; // reset the gear system 
+        this.rpm = 800; // reset RPM to idle
+        this.acceleration = 0; // reset acceleration to 0
+        this.isAccelerating = false; // reset acceleration flag
+        this.zeroToHundredTime = null; // reset 0-100 time
+        this.topSpeed = 0; // reset top speed
+        this.distance = 0; // reset distance traveled
+        this.nitrousActive = false;
     }
 }
