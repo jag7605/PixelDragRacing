@@ -1,3 +1,5 @@
+import MenuUi from '../ui/MenuUi.js';
+
 export default class MenuScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuScene' });
@@ -8,60 +10,48 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('sky', 'assets/backgrounds/sky_day_1440x1080.png');
         this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
 
+        //Logo
+        this.load.image('gameLogo', 'assets/ui/gameLogo/PDRlogo.png'); 
+
         //Buttons
-        this.load.image('start_btn', 'assets/ui/buttonImages/start_btn.png'); 
-        this.load.image('steeringWheel', 'assets/steering_wheel.png');
-        this.load.image('wrench', 'assets/wrench.png');
+        this.load.image('btn_start',    'assets/ui/buttonImages/play2.png');
+        this.load.image('btn_settings', 'assets/ui/buttonImages/settings2.png');
+        this.load.image('btn_garage',   'assets/ui/buttonImages/shop.png');
+
+        
     }
 
     create() {
-        // Background
-        this.add.image(640, 360, 'sky').setDisplaySize(1280, 720);
-        this.add.image(640, 550, 'road').setDisplaySize(1280, 256);
 
-        // Title
-        this.add.text(640, 150, "Pixel", {
-            font: "64px Arial",
-            fill: "#000",
-            stroke: "#fff",
-            strokeThickness: 6
-        }).setOrigin(0.5);
+        const { width: W, height: H } = this.scale;
 
-        this.add.text(640, 230, "Drag Racing", {
-            font: "64px Arial",
-            fill: "#000",
-            stroke: "#fff",
-            strokeThickness: 6
-        }).setOrigin(0.5);
+         // Background
+        this.add.image(W/2, H/2, 'sky').setDisplaySize(W, H);
+        this.add.image(W/2, H - 100, 'road').setDisplaySize(W, 200);
 
-        // Buttons (x, y, key, label, action)
-        this.createMenuButton(440, 600, 'wrench', 'Settings', () => {
-            this.scene.start('SettingsScene');
+        // Logo
+        const logo = this.add.image(W/2, 250, 'gameLogo').setOrigin(0.5);
+        const maxLogoWidth = W * 0.75;
+        const scale = Math.min(maxLogoWidth / logo.width, 1);
+        logo.setScale(0.5); 
+
+        // UI helper
+        const ui = new MenuUi(this);
+
+        // Buttons
+        ui.createButton(W/2 - 200, H - 140, 'btn_settings', 'SETTINGS', 0.45, 0.55, () => {
+        this.scene.start('SettingsScene');
+        },);
+
+        ui.createButton(W/2, H - 120, 'btn_start', 'START', 0.65, 0.75, () => {
+        this.scene.start('RaceScene');
+        }, 95);
+
+        ui.createButton(W/2 + 200, H - 140, 'btn_garage', 'GARAGE', 0.45, 0.55, () => {
+        this.scene.start('GarageScene');
         });
 
-        this.createMenuButton(640, 600, 'start_btn', '', () => {   // ✅ no need for “Start” text in file name
-            this.scene.start('RaceScene');
-        });
+  }
 
-        this.createMenuButton(840, 600, 'garage_icon', 'Garage', () => {
-            this.scene.start('GarageScene');
-        });
-    }
-
-    createMenuButton(x, y, key, label, callback) {
-        const btn = this.add.image(x, y, key).setScale(0.6).setInteractive();
-
-        if (label) {
-            this.add.text(x, y + 60, label, {
-                font: "24px Arial",
-                fill: "#fff",
-                stroke: "#000",
-                strokeThickness: 3
-            }).setOrigin(0.5);
-        }
-
-        btn.on('pointerover', () => btn.setScale(0.7));
-        btn.on('pointerout', () => btn.setScale(0.6));
-        btn.on('pointerdown', callback);
-    }
+        
 }
