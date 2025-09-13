@@ -8,6 +8,11 @@ export default class MenuUi {
       .setScale(baseScale)
       .setInteractive({ useHandCursor: true });
 
+    if (label) {
+      this.scene.add.bitmapText(x, y + labelOffsetY, 'pixelFont', label, 28)
+        .setOrigin(0.5);
+    }
+
     btn.on('pointerover', () => btn.setScale(hoverScale));
     btn.on('pointerout',  () => btn.setScale(baseScale));
     btn.on('pointerdown', onClick);

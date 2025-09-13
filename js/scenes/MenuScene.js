@@ -18,7 +18,11 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('btn_settings', 'assets/ui/buttonImages/settings2.png');
         this.load.image('btn_garage',   'assets/ui/buttonImages/shop.png');
 
-        
+        // Pixel font
+        this.load.bitmapFont('pixelFont', 'assets/ui/font/font.png', 'assets/ui/font/font.xml');
+
+        //cloud
+        this.load.image('cloud', 'assets/backgrounds/pixel_cloud.png');
     }
 
     create() {
@@ -34,6 +38,12 @@ export default class MenuScene extends Phaser.Scene {
         const maxLogoWidth = W * 0.75;
         const scale = Math.min(maxLogoWidth / logo.width, 1);
         logo.setScale(0.5); 
+
+        // Clouds
+        this.add.image(W/2 - 390, 150, 'cloud').setScale(0.27); 
+        this.add.image(W/2 + 268, 320, 'cloud').setScale(0.22); 
+        this.add.image(W/2 + 340, 120, 'cloud').setScale(0.3);      
+        this.add.image(W/2 - 300, 360, 'cloud').setScale(0.25);    
 
         // UI helper
         const ui = new MenuUi(this);
