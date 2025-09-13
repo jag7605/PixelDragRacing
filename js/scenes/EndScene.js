@@ -35,6 +35,22 @@ export default class EndScene extends Phaser.Scene {
             result = 'YOU LOSE!';
         }
 
+        //if finalTime is null display DNF for finish time
+        let displayFinalTime;
+        if (finalTime === null) {
+            displayFinalTime = 'DNF';
+        } else {
+            displayFinalTime = `${finalTime.toFixed(2)}s`;
+        }
+
+        //if botTime is null display DNF for bot time
+        let displayBotTime;
+        if (botTime === null) {
+            displayBotTime = 'DNF';
+        } else {
+            displayBotTime = `${botTime.toFixed(2)}s`;
+        }
+
         //add game over text
         this.add.bitmapText(640, 100, 'pixelFont', 'GAME OVER', 60).setOrigin(0.5);
 
@@ -42,10 +58,10 @@ export default class EndScene extends Phaser.Scene {
         this.add.bitmapText(640, 200, 'pixelFont', result, 50).setOrigin(0.5);
 
         //display final time
-        this.add.bitmapText(640, 300, 'pixelFont', `Final Time: ${finalTime.toFixed(2)}s`, 30).setOrigin(0.5);
+        this.add.bitmapText(640, 300, 'pixelFont', `Your Time: ${displayFinalTime}`, 30).setOrigin(0.5);
 
         //bot time
-        this.add.bitmapText(640, 360, 'pixelFont', `Opponent Time: ${botTime.toFixed(2)}s`, 30).setOrigin(0.5);
+        this.add.bitmapText(640, 360, 'pixelFont', `Opponent Time: ${displayBotTime}`, 30).setOrigin(0.5);
 
         //0-100 time
         //if zeroToHundredTime is null display N/A

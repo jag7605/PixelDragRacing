@@ -407,11 +407,27 @@ export default class RaceScene extends Phaser.Scene {
         //player crosses finish line
         if (!this.playerCar.finishTime && this.playerCar.sprite.x >= this.trackLength - 250) {
             this.playerCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
+
+            //if bot hasn't finished yet start DNF timer for 7 seconds
+            if (!this.botCar.finishTime) {
+                this.dnfCountdown();
+                this.dnfTimer = this.time.delayedCall(7000, () => {
+                    this.botCar.finishTime = 'DNF'; // bot did not finish
+                });
+            }
         }
 
         //bot crosses finish line
         if (!this.botCar.finishTime && this.botCar.sprite.x >= this.trackLength - 250) {
             this.botCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
+
+            //if player hasn't finished yet start DNF timer for 7 seconds
+            if (!this.playerCar.finishTime) {
+                this.dnfCountdown();
+                this.dnfTimer = this.time.delayedCall(7000, () => {
+                    this.playerCar.finishTime = 'DNF'; // player did not finish
+                });
+            }
         }
 
         //end game if both cars have finished
@@ -425,14 +441,20 @@ export default class RaceScene extends Phaser.Scene {
         this.raceEnded = true;
 
         //check who won
-        if (this.botCar.finishTime) {
+        if (this.botCar.finishTime !== 'DNF' && this.playerCar.finishTime !== 'DNF') {
             if (this.playerCar.finishTime < this.botCar.finishTime) {
                 this.registry.set('youWin', true);
             } else {
                 this.registry.set('youWin', false);
             }
-        } else {
+        } 
+        else if (this.playerCar.finishTime === 'DNF') {
+            this.registry.set('youWin', false); // player DNF
+            this.playerCar.finishTime = null; // set to null for display purposes
+        }
+        else {
             this.registry.set('youWin', true);
+            this.botCar.finishTime = null; // set to null for display purposes
         }
 
         this.registry.set('finalTime', this.playerCar.finishTime);
@@ -452,6 +474,7 @@ export default class RaceScene extends Phaser.Scene {
         this.totalPausedTime = 0;
         this.playerCar.finishTime = null;
         this.botCar.finishTime = null;
+        this.dnfTimer = null;
 
         this.playerCar.distance = 0;
         this.botCar.distance = 0;
@@ -463,5 +486,37 @@ export default class RaceScene extends Phaser.Scene {
         this.registry.set('zeroToHundredTime', null);
         this.registry.set('youWin', false);
         this.registry.set('botTime', 0);
+
+        //reset dnf timer
+        if (this.dnfTimer) {
+            this.dnfTimer.remove(); 
+            this.dnfTimer = null;
+        }
+    }
+
+    dnfCountdown() {
+        let count = 7;
+        let dnfText = this.add.text(640, 300, null, {
+            fontSize: "80px",
+            color: "#fff",
+            fontStyle: "bold"
+        }).setOrigin(0.5).setScrollFactor(0);
+
+        this.time.addEvent({
+            delay: 1000,
+            repeat: 7,
+            callback: () => {
+                if (count > 0 && count <= 5) {
+                    dnfText.setText(count);
+                    count--;
+                }
+                else if (count > 5){
+                    count--;
+                }
+                else {
+                    dnfText.destroy();
+                }
+            }
+        });
     }
 }
