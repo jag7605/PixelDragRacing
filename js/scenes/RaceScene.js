@@ -404,25 +404,41 @@ export default class RaceScene extends Phaser.Scene {
         this.speedText.setText(this.playerCar.speed.toFixed(0));
 
         // === Finish line check ===
-        if (!this.raceEnded) {
-            if (this.playerCar.sprite.x >= this.trackLength - 250) {
-                this.registry.set('youWin', true);
-                this.raceOver(time);
-            } else if (this.botCar.sprite.x >= this.trackLength - 250) {
-                this.registry.set('youWin', false);
-                this.raceOver(time);
-            }
+        //player crosses finish line
+        if (!this.playerCar.finishTime && this.playerCar.sprite.x >= this.trackLength - 250) {
+            this.playerCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
+        }
+
+        //bot crosses finish line
+        if (!this.botCar.finishTime && this.botCar.sprite.x >= this.trackLength - 250) {
+            this.botCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
+        }
+
+        //end game if both cars have finished
+        if (this.playerCar.finishTime && this.botCar.finishTime) {
+            this.raceOver();
         }
     }
 
-    raceOver(time) {
+    raceOver() {
         if (this.raceEnded) return;
         this.raceEnded = true;
 
-        const finalTime = (time - this.startTime - this.totalPausedTime) / 1000;
-        this.registry.set('finalTime', finalTime);
+        //check who won
+        if (this.botCar.finishTime) {
+            if (this.playerCar.finishTime < this.botCar.finishTime) {
+                this.registry.set('youWin', true);
+            } else {
+                this.registry.set('youWin', false);
+            }
+        } else {
+            this.registry.set('youWin', true);
+        }
+
+        this.registry.set('finalTime', this.playerCar.finishTime);
         this.registry.set('topSpeed', this.playerCar?.topSpeed || 0);
         this.registry.set('zeroToHundredTime', this.playerCar?.zeroToHundredTime ?? null);
+        this.registry.set('botTime', this.botCar.finishTime);
 
         this.time.delayedCall(500, () => {
             this.scene.start("EndScene");
@@ -434,6 +450,8 @@ export default class RaceScene extends Phaser.Scene {
         this.raceEnded = false;
         this.startTime = 0;
         this.totalPausedTime = 0;
+        this.playerCar.finishTime = null;
+        this.botCar.finishTime = null;
 
         this.playerCar.distance = 0;
         this.botCar.distance = 0;
@@ -444,5 +462,6 @@ export default class RaceScene extends Phaser.Scene {
         this.registry.set('topSpeed', 0);
         this.registry.set('zeroToHundredTime', null);
         this.registry.set('youWin', false);
+        this.registry.set('botTime', 0);
     }
 }

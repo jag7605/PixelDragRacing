@@ -25,6 +25,7 @@ export default class EndScene extends Phaser.Scene {
         const zeroToHundredTime = this.registry.get('zeroToHundredTime');
         const topSpeed = this.registry.get('topSpeed');
         const resultText = this.registry.get('youWin');
+        const botTime = this.registry.get('botTime');
         
         //check if player won or lost
         let result;
@@ -43,20 +44,23 @@ export default class EndScene extends Phaser.Scene {
         //display final time
         this.add.bitmapText(640, 300, 'pixelFont', `Final Time: ${finalTime.toFixed(2)}s`, 30).setOrigin(0.5);
 
+        //bot time
+        this.add.bitmapText(640, 360, 'pixelFont', `Opponent Time: ${botTime.toFixed(2)}s`, 30).setOrigin(0.5);
+
         //0-100 time
         //if zeroToHundredTime is null display N/A
         if (zeroToHundredTime === null) {
-            this.add.bitmapText(640, 360, 'pixelFont', `0-100 Time: N/A`, 30).setOrigin(0.5);
+            this.add.bitmapText(640, 420, 'pixelFont', `0-100 Time: N/A`, 30).setOrigin(0.5);
         } else {
-            this.add.bitmapText(640, 360, 'pixelFont', `0-100 Time: ${zeroToHundredTime.toFixed(2)}s`, 30).setOrigin(0.5);
+            this.add.bitmapText(640, 420, 'pixelFont', `0-100 Time: ${zeroToHundredTime.toFixed(2)}s`, 30).setOrigin(0.5);
         }
 
         //top speed
-        this.add.bitmapText(640, 420, 'pixelFont', `Top Speed: ${topSpeed.toFixed(1)} km/h`, 30).setOrigin(0.5);
+        this.add.bitmapText(640, 480, 'pixelFont', `Top Speed: ${topSpeed.toFixed(1)} km/h`, 30).setOrigin(0.5);
 
         //add restart button with white rectangle background
         //add restart container for text and rectangle
-        const restartContainer = this.add.container(340, 550).setSize(300, 60).setInteractive();
+        const restartContainer = this.add.container(340, 610).setSize(300, 60).setInteractive();
 
         //add white rectangle
         const rect = this.add.rectangle(0, 0, 250, 60, 0xFFFFFF);
@@ -91,7 +95,7 @@ export default class EndScene extends Phaser.Scene {
         //main menu button
 
         //add menu container for text and rectangle
-        const MenuContainer = this.add.container(940, 550).setSize(300, 60).setInteractive();
+        const MenuContainer = this.add.container(940, 610).setSize(300, 60).setInteractive();
 
         //add white rectangle
         const rect1 = this.add.rectangle(0, 0, 250, 60, 0xFFFFFF);
