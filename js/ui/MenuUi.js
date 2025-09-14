@@ -4,6 +4,8 @@ export default class MenuUi {
 
   // Preload sound into scene so they’re ready
     this.clickSound = this.scene.sound.add('clickSound');
+    this.hoverSound = this.scene.sound.add('hoverSound');
+
   }
 
   
@@ -18,7 +20,13 @@ export default class MenuUi {
         .setOrigin(0.5);
     }
 
-    btn.on('pointerover', () => btn.setScale(hoverScale));
+    //hover sound
+    btn.on('pointerover'
+      , () => {
+      btn.setScale(hoverScale);
+      this.hoverSound.play();
+    });
+
     btn.on('pointerout',  () => btn.setScale(baseScale));
 
     //click sound

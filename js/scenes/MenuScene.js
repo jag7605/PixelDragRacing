@@ -26,6 +26,8 @@ export default class MenuScene extends Phaser.Scene {
 
         // Sound
         this.load.audio('clickSound', 'assets/sound/button_click.mp3');
+        this.load.audio('hoverSound', 'assets/sound/hover_button.mp3');
+
     }
 
     create() {
