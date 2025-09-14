@@ -1,7 +1,12 @@
 export default class MenuUi {
   constructor(scene) {
     this.scene = scene;
+
+  // Preload sound into scene so they’re ready
+    this.clickSound = this.scene.sound.add('clickSound');
   }
+
+  
 
   createButton(x, y, textureKey, label, baseScale, hoverScale, onClick, labelOffsetY = 75) {
     const btn = this.scene.add.image(x, y, textureKey)
@@ -15,7 +20,12 @@ export default class MenuUi {
 
     btn.on('pointerover', () => btn.setScale(hoverScale));
     btn.on('pointerout',  () => btn.setScale(baseScale));
-    btn.on('pointerdown', onClick);
+
+    //click sound
+    btn.on('pointerdown', () => {
+      this.clickSound.play();
+      onClick();
+    });
 
     return btn;
   }

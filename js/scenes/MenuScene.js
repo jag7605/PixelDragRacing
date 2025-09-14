@@ -23,6 +23,9 @@ export default class MenuScene extends Phaser.Scene {
 
         //cloud
         this.load.image('cloud', 'assets/backgrounds/pixel_cloud.png');
+
+        // Sound
+        this.load.audio('clickSound', 'assets/sound/button_click.mp3');
     }
 
     create() {
