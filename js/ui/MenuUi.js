@@ -24,14 +24,14 @@ export default class MenuUi {
     btn.on('pointerover'
       , () => {
       btn.setScale(hoverScale);
-      this.hoverSound.play();
+      if( !this.scene.registry.get('sfxMuted')) this.hoverSound.play();
     });
 
     btn.on('pointerout',  () => btn.setScale(baseScale));
 
     //click sound
     btn.on('pointerdown', () => {
-      this.clickSound.play();
+      if( !this.scene.registry.get('sfxMuted')) this.clickSound.play();
       onClick();
     });
 
