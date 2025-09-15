@@ -17,6 +17,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('btn_start',    'assets/ui/buttonImages/play2.png');
         this.load.image('btn_settings', 'assets/ui/buttonImages/settings2.png');
         this.load.image('btn_garage',   'assets/ui/buttonImages/shop.png');
+        this.load.image('info', 'assets/ui/buttonImages/info.png');
 
         // Pixel font
         this.load.bitmapFont('pixelFont', 'assets/ui/font/font.png', 'assets/ui/font/font.xml');
@@ -64,6 +65,12 @@ export default class MenuScene extends Phaser.Scene {
 
         ui.createButton(W/2 + 200, H - 140, 'btn_garage', 'GARAGE', 0.45, 0.55, () => {
         this.scene.start('GarageScene');
+        });
+
+        // Info button
+        ui.createButton(W - 40, 40, 'info', null, 0.3, 0.35, () => {
+            this.scene.pause();
+            this.scene.launch('InfoScene');
         });
 
   }

@@ -5,6 +5,7 @@ import EndScene from './js/scenes/EndScene.js';
 import MenuScene from './js/scenes/MenuScene.js';
 import PauseScene from './js/scenes/PauseScene.js';
 import RaceScene from './js/scenes/RaceScene.js';
+import InfoScene from './js/scenes/InfoScene.js';
 
 
 // Phaser game configuration (preserving your prototype settings)
@@ -26,7 +27,8 @@ const config = {
         EndScene,
         MenuScene,
         PauseScene,
-        RaceScene
+        RaceScene,
+        InfoScene
     ]
 };
 

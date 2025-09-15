@@ -19,6 +19,7 @@ export default class PauseScene extends Phaser.Scene {
             'assets/ui/font/font.xml'  
         );
         this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
+        this.load.image('info', 'assets/ui/buttonImages/info.png');
     }
     create() {
 
@@ -236,7 +237,28 @@ export default class PauseScene extends Phaser.Scene {
             }
         });
 
-        
+       //info button
+        const infoButton = this.add.image(640, 560, 'info')
+            .setOrigin(0.5)
+            .setInteractive()
+            .setScale(0.3);
+
+        // Hover effects
+        infoButton.on('pointerover', () => {
+            infoButton.setTint(0x888888); // darker tint
+        });
+
+        infoButton.on('pointerout', () => {
+            infoButton.clearTint(); // reset
+        });
+
+        infoButton.on('pointerdown', () => {
+            // play sound effect only if not muted
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            this.scene.launch('InfoScene');
+            //bring to top
+            this.scene.bringToTop('InfoScene');
+        }); 
 
     }
 }
