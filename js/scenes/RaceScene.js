@@ -58,14 +58,17 @@ export default class RaceScene extends Phaser.Scene {
         this.resetRace();   // safe now, because cars exist
 
         // === Track length (in px) ===
-        this.trackLength = 2500;
+        this.trackLength = 3000;
 
         // === Backgrounds ===
         this.sky = this.add.tileSprite(0, 0, this.trackLength, 720, 'sky').setOrigin(0, 0);
         this.road = this.add.tileSprite(0, 325, this.trackLength, 256, 'road').setOrigin(0, 0);
 
-        // === Start & Finish lines ===
-        this.finishLine = this.add.image(this.trackLength - 200, 325, 'finishLine').setOrigin(0, 0);
+        this.finishLineX = this.trackLength - 200;
+        this.finishLine = this.add.image(this.finishLineX, 325, 'finishLine')
+            .setOrigin(0, 0)
+            .setVisible(false);
+
 
         // === Background Music ===
         if (this.registry.get('bgMusic') === undefined) {
@@ -341,7 +344,8 @@ export default class RaceScene extends Phaser.Scene {
         this.sky.setDepth(-1);
         this.road.setDepth(0);
         this.finishLine.setDepth(1);
-        this.playerCar.sprite.setDepth(2);  // <-- IMPORTANT
+        this.botCar.sprite.setDepth(2);
+        this.playerCar.sprite.setDepth(2);
         this.rpmDial.setDepth(3);
         this.mphDial.setDepth(3);
         this.speedText.setDepth(3);
@@ -365,10 +369,25 @@ export default class RaceScene extends Phaser.Scene {
         this.playerCar.sprite.x = 150 + this.playerCar.distance;
         this.botCar.sprite.x = 150 + this.botCar.distance;
 
+        // Show and scroll finish line when player is near
+        const distanceToFinish = this.finishLineX - (150 + this.playerCar.distance);
+
+        if (distanceToFinish <= 800) { // show it when near
+            this.finishLine.setVisible(true);
+
+            // Scroll finish line with the road
+            this.finishLine.x -= (this.playerCar.speed / 50) * (delta / 16.67) * 3; // same direction as road tile
+        }
+
         // === Update cars ===
         this.playerCar.update(delta, this.cursors, this.shiftUpKey, this.shiftDownKey, this.nitrousKey,
             (time - this.startTime - this.totalPausedTime) / 1000);
         this.botCar.update(delta, time);
+
+        let pxPerFrame = (this.playerCar.speed / 50) * (delta / 16.67); // tweak divisor for intensity
+        this.road.tilePositionX += pxPerFrame * 3; // exaggerate by x3
+        this.sky.tilePositionX += pxPerFrame * 0.5; // slower for parallax
+
 
         // === HUD update ===
         this.hudText.setText(
@@ -405,27 +424,28 @@ export default class RaceScene extends Phaser.Scene {
 
         // === Finish line check ===
         //player crosses finish line
-        if (!this.playerCar.finishTime && this.playerCar.sprite.x >= this.trackLength - 250) {
+        // Check if player touches finish line
+        if (!this.playerCar.finishTime && this.playerCar.sprite.x + this.playerCar.sprite.width >= this.finishLine.x) {
             this.playerCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
 
-            //if bot hasn't finished yet start DNF timer for 7 seconds
+            // Start bot DNF timer if bot hasn't finished
             if (!this.botCar.finishTime) {
                 this.dnfCountdown();
                 this.dnfTimer = this.time.delayedCall(7000, () => {
-                    this.botCar.finishTime = 'DNF'; // bot did not finish
+                    this.botCar.finishTime = 'DNF';
                 });
             }
         }
 
-        //bot crosses finish line
-        if (!this.botCar.finishTime && this.botCar.sprite.x >= this.trackLength - 250) {
+        // Check if bot touches finish line
+        if (!this.botCar.finishTime && this.botCar.sprite.x + this.botCar.sprite.width >= this.finishLine.x) {
             this.botCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
 
-            //if player hasn't finished yet start DNF timer for 7 seconds
+            // Start player DNF timer if player hasn't finished
             if (!this.playerCar.finishTime) {
                 this.dnfCountdown();
                 this.dnfTimer = this.time.delayedCall(7000, () => {
-                    this.playerCar.finishTime = 'DNF'; // player did not finish
+                    this.playerCar.finishTime = 'DNF';
                 });
             }
         }
@@ -447,7 +467,7 @@ export default class RaceScene extends Phaser.Scene {
             } else {
                 this.registry.set('youWin', false);
             }
-        } 
+        }
         else if (this.playerCar.finishTime === 'DNF') {
             this.registry.set('youWin', false); // player DNF
             this.playerCar.finishTime = null; // set to null for display purposes
@@ -489,7 +509,7 @@ export default class RaceScene extends Phaser.Scene {
 
         //reset dnf timer
         if (this.dnfTimer) {
-            this.dnfTimer.remove(); 
+            this.dnfTimer.remove();
             this.dnfTimer = null;
         }
     }
@@ -510,7 +530,7 @@ export default class RaceScene extends Phaser.Scene {
                     dnfText.setText(count);
                     count--;
                 }
-                else if (count > 5){
+                else if (count > 5) {
                     count--;
                 }
                 else {
