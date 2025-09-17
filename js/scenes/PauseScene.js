@@ -44,74 +44,28 @@ export default class PauseScene extends Phaser.Scene {
         if (this.registry.get('musicMuted') === undefined) {
             this.registry.set('musicMuted', false);
         }
-
-        //large resume button
-        const resumeButton = this.add.image(640, 440, 'resume')
-            .setOrigin(0.5)
-            .setInteractive()
-            .setScale(0.6);
-
-        // Hover effects
-        resumeButton.on('pointerover', () => {
-            resumeButton.setTint(0x888888); // darker tint
-        });
-
-        resumeButton.on('pointerout', () => {
-            resumeButton.clearTint(); // reset
-        });
-
-        resumeButton.on('pointerdown', () => {
-            // play sound effect only if not muted
-            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-            
-            //if the game has started, update totalPausedTime
+        
+        //resume button
+        const resumeButton = this.createButton(640, 440, 'resume', 0.6, () => {
             if (raceScene.raceStarted) {
-                const pauseDuration = this.time.now - this.scene.get('RaceScene').pauseStartTime; // calculate pause duration
-                this.scene.get('RaceScene').totalPausedTime += pauseDuration;
+                const pauseDuration = this.time.now - raceScene.pauseStartTime;
+                raceScene.totalPausedTime += pauseDuration;
             }
-
-            this.scene.stop();            // Stop PauseScene
-            this.scene.resume('RaceScene'); // Resume game scene
+            this.scene.stop();            
+            this.scene.resume('RaceScene');
         });
 
         //resume text
         this.add.bitmapText(640, 440, 'pixelFont', 'RESUME', 32).setOrigin(0.5);
 
         // garage button
-        const garageButton = this.add.image(450, 300, 'shop')
-            .setOrigin(0.5)
-            .setInteractive()
-            .setScale(0.5);
-
-        // Hover effects
-        garageButton.on('pointerover', () => {
-            garageButton.setTint(0x888888); // darker tint
-        });
-
-        garageButton.on('pointerout', () => {
-            garageButton.clearTint(); // reset
+        const garageButton = this.createButton(450, 300, 'shop', 0.5, () => {
+            this.scene.lauch('garageScene');
         });
 
         // Main Menu button
 
-        const menuButton = this.add.image(640, 300, 'menu')
-            .setOrigin(0.5)
-            .setInteractive()
-            .setScale(0.5);
-
-        // Hover effects
-        menuButton.on('pointerover', () => {
-            menuButton.setTint(0x888888); // darker tint
-        });
-
-        menuButton.on('pointerout', () => {
-            menuButton.clearTint(); // reset
-        });
-
-        menuButton.on('pointerdown', () => {
-            // play sound effect only if not muted
-            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-            //stop music
+        const menuButton = this.createButton(640, 300, 'menu', 0.5, () =>{
             if (raceScene.bgMusic) {
                 raceScene.bgMusic.stop();
             }
@@ -122,24 +76,7 @@ export default class PauseScene extends Phaser.Scene {
 
 
         // Restart button
-
-        const restartButton  = this.add.image(830, 300, 'replay')
-            .setOrigin(0.5)
-            .setInteractive()
-            .setScale(0.5);
-
-        // Hover effects
-        restartButton.on('pointerover', () => {
-            restartButton.setTint(0x888888); // darker tint
-        });
-
-        restartButton.on('pointerout', () => {
-            restartButton.clearTint(); // reset
-        });
-
-        restartButton.on('pointerdown', () => {
-            // play sound effect only if not muted
-            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+        const restartButton = this.createButton(830, 300, 'replay', 0.5, () => {
             //stop music
             if (raceScene.bgMusic) {
                 raceScene.bgMusic.stop();
@@ -149,116 +86,74 @@ export default class PauseScene extends Phaser.Scene {
         });
 
         // Music toggle button
-        const musicButton = this.add.image(545, 560, 'music')
-            .setOrigin(0.5)
-            .setInteractive()
-            .setScale(0.3);
-
-        //create crossed line for music off state
-        const line = this.add.graphics();
-        line.lineStyle(5, 0xff0000, 1);
-        line.moveTo(-25, -25);
-        line.lineTo(25, 25);
-        line.strokePath();
-        line.setPosition(musicButton.x, musicButton.y);
-       //set to true is music is paused
-        let musicMuted = this.registry.get('musicMuted');
-        line.setVisible(musicMuted);
-
-        // Hover effects
-        musicButton.on('pointerover', () => {
-            musicButton.setTint(0x888888); // darker tint
-        });
-
-        musicButton.on('pointerout', () => {
-            musicButton.clearTint(); // reset
-        });
-
-        //for when we add music
-        musicButton.on('pointerdown', () => {
-            // play sound effect only if not muted
-            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-
-            musicMuted = !musicMuted;
-            this.registry.set('musicMuted', musicMuted);
-
+        this.createToggleButton(545, 560, 'music', 0.3, 'musicMuted', (muted) => {
             if (raceScene.bgMusic) {
-                if (musicMuted) {
-                    raceScene.bgMusic.pause();
-                    line.setVisible(true);  // show cross line
-                    musicButton.setTint(0xff0000);
-                } else {
-                    raceScene.bgMusic.resume();
-                    line.setVisible(false); 
-                    musicButton.clearTint();
-                }
+                if (muted) raceScene.bgMusic.pause();
+                else raceScene.bgMusic.resume();
             }
         });
 
         //sound button
-
-        const soundButton = this.add.image(735, 560, 'sound')
-            .setOrigin(0.5)
-            .setInteractive()
-            .setScale(0.35);
-        
-        //create crossed line for sound off state
-        const soundLine = this.add.graphics();
-        soundLine.lineStyle(5, 0xff0000, 1);
-        soundLine.moveTo(-25, -25);
-        soundLine.lineTo(25, 25);
-        soundLine.strokePath();
-        soundLine.setPosition(soundButton.x, soundButton.y);
-        const sfxMuted = this.registry.get('sfxMuted');
-        soundLine.setVisible(sfxMuted);
+        this.createToggleButton(735, 560, 'sound', 0.35, 'sfxMuted');
 
 
-        // Hover effects
-        soundButton.on('pointerover', () => {
-            soundButton.setTint(0x888888); // darker tint
-        });
-
-        soundButton.on('pointerout', () => {
-            soundButton.clearTint(); // reset
-        });
-
-        soundButton.on('pointerdown', () => {
-            // play sound effect only if not muted
-            const muted = !this.registry.get('sfxMuted');
-            this.registry.set('sfxMuted', muted);
-
-            // Toggle line and tint
-            if (muted) {
-                soundLine.setVisible(true);
-                soundButton.setTint(0xff0000);
-            } else {
-                soundLine.setVisible(false);
-                soundButton.clearTint();
-            }
-        });
-
-       //info button
-        const infoButton = this.add.image(640, 560, 'info')
-            .setOrigin(0.5)
-            .setInteractive()
-            .setScale(0.3);
-
-        // Hover effects
-        infoButton.on('pointerover', () => {
-            infoButton.setTint(0x888888); // darker tint
-        });
-
-        infoButton.on('pointerout', () => {
-            infoButton.clearTint(); // reset
-        });
-
-        infoButton.on('pointerdown', () => {
-            // play sound effect only if not muted
-            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+        //info button
+        const infoButton = this.createButton(640, 560, 'info', 0.3, () => {
             this.scene.launch('InfoScene');
             //bring to top
             this.scene.bringToTop('InfoScene');
-        }); 
-
+        });
     }
+
+    // Helper to create buttons
+    createButton(x, y, key, scale, onClick) {
+        const btn = this.add.image(x, y, key)
+            .setOrigin(0.5)
+            .setInteractive()
+            .setScale(scale);
+
+        // Hover effects
+        btn.on('pointerover', () => btn.setTint(0x888888));
+        btn.on('pointerout', () => btn.clearTint());
+
+        // Click sound + custom action
+        btn.on('pointerdown', () => {
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            onClick?.(); // only call if provided
+        });
+
+        return btn;
+    }
+
+    //helper for toggle buttons
+    createToggleButton(x, y, key, scale, registryKey, onToggle) {
+        const btn = this.add.image(x, y, key)
+            .setOrigin(0.5)
+            .setInteractive()
+            .setScale(scale);
+
+        // Cross line
+        const line = this.add.graphics();
+        line.lineStyle(5, 0xff0000, 1).moveTo(-25, -25).lineTo(25, 25).strokePath();
+        line.setPosition(btn.x, btn.y);
+
+        let state = this.registry.get(registryKey) || false;
+        line.setVisible(state);
+
+        btn.on('pointerover', () => btn.setTint(0x888888));
+        btn.on('pointerout', () => btn.clearTint());
+
+        btn.on('pointerdown', () => {
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            state = !state;
+            this.registry.set(registryKey, state);
+            line.setVisible(state);
+            if (state) btn.setTint(0xff0000);
+            else btn.clearTint();
+            onToggle?.(state); // callback to handle extra logic
+        });
+
+        return { btn, line };
+    }
+
 }
