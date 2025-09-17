@@ -48,10 +48,10 @@ export default class InfoScene extends Phaser.Scene {
 
         //description text
         const description = [
-            "Welcome to Pixel Drag Racing! Get ready for an adrenaline-pumping drag racing experience where precision and timing are key to victory. In Pixel Drag Racing, you'll face off against challenging AI opponents in intense races. Your goal is to reach the finish line before your rival. Good luck, and may the best racer win!"
+            "Welcome to Pixel Drag Racing! Rev your engines and get ready for fast-paced, head-to-head action. In this arcade thrill ride, victory comes down to one thing, perfect timing. Nail your shifts, outpace your opponents, and claim your spot on top. Do you have the timing, the focus, and the guts to be the fastest on the track? Let’s find out!"
         ];
         addWrappedTextArray(
-            this, this.container, 640, 220, description, 'pixelFont', 13,
+            this, this.container, 640, 220, description, 'pixelFont', 12.5,
             yellowBox.displayWidth - 40, 5, 0x852020
         );
         // controls list
