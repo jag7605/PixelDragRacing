@@ -26,9 +26,6 @@ export default class Car {
         this.zeroToHundredTime = null; // Time taken to go from 0 to 100 km/h (kept null until achieved)
         this.topSpeed = 0; // Track the top speed achieved
         this.distance = 0; // Track distance traveled
-        this.shiftCount = 0; // Count of gear shifts made
-        this.perfectShifts = 0; // Count of perfect gear shifts made
-        this.lastRpmBeforeShift = 0; // Temporary storage for RPM before shift (used for tracking perfect shifts)
     }
 
     // This method updates the car's position and speed based on input
@@ -54,22 +51,13 @@ export default class Car {
 
         // Gear shifting
         if (Phaser.Input.Keyboard.JustDown(shiftUpKey)) { // if the shift up key is pressed,
-            this.lastRpmBeforeShift = this.rpm; // Store RPM before shift
             if (this.gearSystem.shiftUp()) { // shift into the next gear
-                this.shiftCount++; // Increase the shift count
-                // Check for perfect shift (within 8250-8750 RPM before shift)
-                if (this.lastRpmBeforeShift >= 8250 && this.lastRpmBeforeShift <= 8750) {
-                    this.perfectShifts++; // Increase perfect shift count
-                    // Add small speed boost for perfect shift
-                    this.speed *= 1.05; // 5% speed boost for perfect shift
-                }
                 this.rpm *= 0.6; // Drop RPM on upshift (going to a higher gear means lower RPM)
                 this.acceleration *= 0.7; // Reduce acceleration curve after upshift
             }
         }
         if (Phaser.Input.Keyboard.JustDown(shiftDownKey)) { // if the shift down key is pressed,
             if (this.gearSystem.shiftDown()) { // shift into the previous gear
-                this.shiftCount++; // Increase the shift count
                 this.rpm *= 1.7; // Increase RPM on downshift (going to a lower gear means higher RPM)
                 if (this.rpm > this.maxRPM) this.rpm = this.maxRPM; // This is to make sure that the RPM does not go past the maximum after downshifting
                 this.acceleration *= 1.2; // Increase acceleration curve after downshift
@@ -114,6 +102,7 @@ export default class Car {
         // Apply nitrous boost if active
         if (this.nitrousActive) {
             this.acceleration *= this.nitrousBoost; // Multiply acceleration by nitrous boost factor
+            // Optional: Add a slight RPM boost during nitrous
             this.rpm += 500 * (delta / 1000);
             if (this.rpm > this.maxRPM) this.rpm = this.maxRPM;
         }
@@ -217,8 +206,8 @@ export default class Car {
                     screenRightX, // Spawn at far right edge of camera
                     lineY,
                     lineWidth,
-                    2,
-                    0xffffff,
+                    2, 
+                    0xffffff, 
                     Phaser.Math.FloatBetween(0.2, 0.5) // Slightly higher opacity for visibility
                 ).setOrigin(0, 0.5);
                 const baseDuration = 400; // Base duration for nitrous
@@ -233,11 +222,7 @@ export default class Car {
                 });
             }
         }
-
-        // make it so you can view shifts, perfect shifts and shift percentage in the console for testing 
-        console.log(`Shifts: ${this.shiftCount}, Perfect Shifts: ${this.perfectShifts}, Perfect Shift %: ${this.getPerfectShiftPercentage()}`);
     }
-
     // Method to get current speed for HUD
     getSpeed() {
         return this.speed.toFixed(1);
@@ -253,32 +238,22 @@ export default class Car {
         return this.gearSystem.currentGear;
     }
 
-    // method to return top speed
+    // Method to get top speed for stats
     getTopSpeed() {
         return this.topSpeed.toFixed(1);
     }
 
-    // method to return 0-100 time in seconds
+    // Method to get 0-100 time for stats
     getZeroToHundredTime() {
         return this.zeroToHundredTime ? (this.zeroToHundredTime / 1000).toFixed(2) : null; // Convert to seconds and format to 2 decimal places
     }
 
-    // method to return distance traveled
+    // Method to get distance traveled for stats
     getDistance() {
         return this.distance.toFixed(1); // Distance traveled formatted to 1 decimal place
     }
 
-    // method to return total number of shifts
-    getShiftCount() {
-        return this.shiftCount;
-    }
-
-    // method to return total number of perfect shifts
-    getPerfectShifts() {
-        return this.perfectShifts;
-    }
-
-    // method to reset car properties on race restart
+    // Method to reset car properties on race restart
     reset() {
         this.speed = 0; // reset speed to 0
         this.gearSystem.reset; // reset the gear system 
@@ -288,10 +263,6 @@ export default class Car {
         this.zeroToHundredTime = null; // reset 0-100 time
         this.topSpeed = 0; // reset top speed
         this.distance = 0; // reset distance traveled
-        this.nitrousActive = false; // reset nitrous flag
-        this.nitrousCooldown = 0; // reset nitrous cooldown
-        this.shiftCount = 0; // reset shift count
-        this.perfectShifts = 0; // reset perfect shift count
-        this.lastRpmBeforeShift = 0; // reset last RPM before shift
+        this.nitrousActive = false;
     }
 }
