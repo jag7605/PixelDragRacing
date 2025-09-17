@@ -93,9 +93,6 @@ export default class RaceScene extends Phaser.Scene {
         this.shiftDownKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
         this.nitrousKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
-        this.playerCar = new Car(this, 150, 410);
-        this.botCar = new Bot(this, 150, 310, 0.1);
-
         // === HUD ===
         this.hudText = this.add.text(20, 20, '', {
             font: '20px Arial',
