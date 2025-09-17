@@ -478,6 +478,9 @@ export default class RaceScene extends Phaser.Scene {
         this.registry.set('topSpeed', this.playerCar?.topSpeed || 0);
         this.registry.set('zeroToHundredTime', this.playerCar?.zeroToHundredTime ?? null);
         this.registry.set('botTime', this.botCar.finishTime);
+        this.registry.set('perfectShifts', this.playerCar.getPerfectShifts());
+        this.registry.set('shiftCount', this.playerCar.getShiftCount());
+        this.registry.set('perfectShiftPercent', this.playerCar.getPerfectShiftPercentage());
 
         this.time.delayedCall(500, () => {
             this.scene.start("EndScene");
@@ -503,6 +506,9 @@ export default class RaceScene extends Phaser.Scene {
         this.registry.set('zeroToHundredTime', null);
         this.registry.set('youWin', false);
         this.registry.set('botTime', 0);
+        this.registry.set('perfectShifts', 0);
+        this.registry.set('shiftCount', 0);
+        this.registry.set('perfectShiftPercent', 0);
 
         //reset dnf timer
         if (this.dnfTimer) {
