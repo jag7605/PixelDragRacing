@@ -11,20 +11,18 @@ export default class BootScene extends Phaser.Scene {
     const { width: W, height: H } = this.scale;
 
     // Add the logo collapsed vertically
-    const logo = this.add.image(W / 2, H * 0.65, 'gameLogo')
-    .setOrigin(0.5, 1)
-    .setScale(0.35, 0.001);
+    const logo = this.add.image(W / 2, H / 2, 'gameLogo')
+    .setOrigin(0.5, 0.5)
+    .setScale(0.5, 0.001);
 
 
     //smooth growing logo animation
-    let currentScaleY = 0.001;
-
     this.load.on('progress', (p) => {
-      const targetScaleY = 0.35 * p; // final height at 50% scale
+      const targetScaleY = 0.6 * p; // scale out from center
       this.tweens.add({
         targets: logo,
         scaleY: targetScaleY,
-        duration: 700,     // how slow it grows
+        duration: 500,     // how slow it grows
         ease: 'Sine.easeOut'
       });
     });
@@ -33,9 +31,10 @@ export default class BootScene extends Phaser.Scene {
       //full size growth when it is finshed 
       this.tweens.add({
         targets: logo,
-        scaleY: 0.35,
-        duration: 700,
-        ease: 'Sine.easeOut',
+        scaleX: 0.7,
+        scaleY: 0.7,
+        duration: 800,
+        ease: 'Back.Out',
         onComplete: () => this.scene.start('MenuScene')
       });
     });
