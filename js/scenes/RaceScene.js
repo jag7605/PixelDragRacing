@@ -29,13 +29,24 @@ export default class RaceScene extends Phaser.Scene {
                     this.raceStarted = true;
                     this.startTime = this.time.now;
 
-                    // === Background Music ===
-                    if (this.registry.get('bgMusic') === undefined) {
-                        const bgMusic = this.sound.add('bgMusic', { volume: 0.5, loop: true });
-                        this.registry.set('bgMusic', bgMusic);
+                    // === Random Background Music ===
+                    const tracks = ['bgMusic1', 'bgMusic2', 'bgMusic3'];
+                    const randomTrack = Phaser.Utils.Array.GetRandom(tracks);
+
+                    // Stop previous music
+                    if (this.bgMusic) {
+                        this.bgMusic.stop();
+                        this.bgMusic.destroy();
                     }
-                    this.bgMusic = this.registry.get('bgMusic');
+
+                    // Add and play new music
+                    this.bgMusic = this.sound.add(randomTrack, { volume: 0.5, loop: true });
                     this.bgMusic.play();
+
+                    // Save as last played track
+                    this.registry.set('lastBgMusic', randomTrack);
+
+                    // Respect mute
                     if (this.registry.get('musicMuted') && this.bgMusic.isPlaying) {
                         this.bgMusic.pause();
                     }
@@ -57,8 +68,10 @@ export default class RaceScene extends Phaser.Scene {
 
         this.load.image('pauseButton', 'assets/ui/buttonImages/pause2.png');
         this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
-        this.load.audio('bgMusic', 'assets/sound/bgMusic.mp3');
-
+        this.load.audio('bgMusic1', 'assets/sound/bgMusic.mp3');
+        this.load.audio('bgMusic2', 'assets/sound/bgMusic2.mp3');
+        this.load.audio('bgMusic3', 'assets/sound/bgMusic3.mp3');
+        
         this.load.image('finishLine', 'assets/backgrounds/Finish_Line.png');
     }
 
