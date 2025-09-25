@@ -28,6 +28,17 @@ export default class RaceScene extends Phaser.Scene {
                     countdownText.destroy();
                     this.raceStarted = true;
                     this.startTime = this.time.now;
+
+                    // === Background Music ===
+                    if (this.registry.get('bgMusic') === undefined) {
+                        const bgMusic = this.sound.add('bgMusic', { volume: 0.5, loop: true });
+                        this.registry.set('bgMusic', bgMusic);
+                    }
+                    this.bgMusic = this.registry.get('bgMusic');
+                    this.bgMusic.play();
+                    if (this.registry.get('musicMuted') && this.bgMusic.isPlaying) {
+                        this.bgMusic.pause();
+                    }
                 }
             }
         });
@@ -70,16 +81,7 @@ export default class RaceScene extends Phaser.Scene {
             .setVisible(false);
 
 
-        // === Background Music ===
-        if (this.registry.get('bgMusic') === undefined) {
-            const bgMusic = this.sound.add('bgMusic', { volume: 0.5, loop: true });
-            this.registry.set('bgMusic', bgMusic);
-        }
-        this.bgMusic = this.registry.get('bgMusic');
-        this.bgMusic.play();
-        if (this.registry.get('musicMuted') && this.bgMusic.isPlaying) {
-            this.bgMusic.pause();
-        }
+        
 
         // === Cars ===
         this.anims.create({
