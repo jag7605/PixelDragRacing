@@ -47,7 +47,14 @@ export default class RaceScene extends Phaser.Scene {
     preload() {
         this.load.image('sky', 'assets/backgrounds/sky_day_1440x1080.png');
         this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
-        this.load.spritesheet('car', 'assets/cars/beater_jeep_ride.png', {
+
+        // Load both cars for the race scene
+        this.load.spritesheet('beater_car',  'assets/cars/beater_car_ride.png',  {
+            frameWidth: 192,
+            frameHeight: 192
+        });
+
+        this.load.spritesheet('beater_jeep', 'assets/cars/beater_jeep_ride.png', {
             frameWidth: 256,
             frameHeight: 256
         });
@@ -63,8 +70,42 @@ export default class RaceScene extends Phaser.Scene {
     }
 
     create() {
+
+        if (!this.registry.get('selectedCar')) {
+        this.registry.set('selectedCar', 'beater_jeep');
+        }
+        
         this.playerCar = new Car(this, 150, 410);
         this.botCar = new Bot(this, 150, 310, 0.1);
+
+        // Helper: ensure an animation exists for a given spritesheet key
+        const makeDriveAnim = (key, fps = 24) => {
+            const animKey = `drive_${key}`;
+            if (!this.anims.exists(animKey)) {
+            // If you’re unsure of exact frame count, 0..7 works for your current sheets.
+            this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers(key, { start: 0, end: 7 }),
+                frameRate: fps,
+                repeat: -1
+            });
+            }
+            return animKey;
+        };
+
+        // Pull selection from the Garage registry (fallback to jeep if none)
+        const selectedKey = this.registry.get('selectedCar') || 'beater_jeep';
+
+        // Build animations we need
+        const playerAnimKey = makeDriveAnim(selectedKey);
+        const botAnimKey    = makeDriveAnim('beater_jeep');
+
+        // Swap textures on already-created sprites from Car/Bot (no Car.js changes)
+        this.playerCar.sprite.setTexture(selectedKey);
+        this.playerCar.sprite.play(playerAnimKey);
+
+        this.botCar.sprite.setTexture('beater_jeep');
+        this.botCar.sprite.play(botAnimKey);
 
         this.resetRace();   // safe now, because cars exist
 
@@ -84,12 +125,6 @@ export default class RaceScene extends Phaser.Scene {
         
 
         // === Cars ===
-        this.anims.create({
-            key: 'drive',
-            frames: this.anims.generateFrameNumbers('car', { start: 0, end: 7 }),
-            frameRate: 24,
-            repeat: -1
-        });
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftUpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
         this.shiftDownKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
