@@ -66,10 +66,11 @@ export default class PauseScene extends Phaser.Scene {
         volumeBar.fillRect(barX, barY, barWidth, barHeight);
 
         //set first volume
-        let volume = this.registry.get('soundVolume') ?? 1;
+        let volume = this.registry.get('soundVolume');
+        if (typeof volume !== 'number') volume = 1;
 
         // Draw handle
-        const handle = this.add.circle(barX + volume * barWidth, barY + barHeight / 2, 12, 0xFF0000)
+        const handle = this.add.circle(barX + (volume / 2) * barWidth, barY + barHeight / 2, 12, 0xFF0000)
             .setInteractive({ useHandCursor: true, draggable: true });
 
         // Drag logic
@@ -77,14 +78,14 @@ export default class PauseScene extends Phaser.Scene {
             // Clamp handle position
             let newX = Phaser.Math.Clamp(dragX, barX, barX + barWidth);
             handle.x = newX;
-            // Calculate volume (0 to 1)
-            volume = (newX - barX) / barWidth;
+            // Calculate volume (0 to 2)
+            volume = (newX - barX) / barWidth * 2;
             this.registry.set('soundVolume', volume);
             this.sound.volume = volume;
         });
 
         // Set initial position
-        handle.x = barX + volume * barWidth;
+        handle.x = barX + (volume/2) * barWidth;
 
         // Enable drag
         this.input.setDraggable(handle);

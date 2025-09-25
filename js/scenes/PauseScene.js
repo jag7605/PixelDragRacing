@@ -6,7 +6,7 @@ export default class PauseScene extends Phaser.Scene {
     preload() {
         this.load.image('yellowSquare', 'assets/ui/yellowSquare.png');
         this.load.image('play', 'assets/ui/buttonImages/play2.png');
-        this.load.image('menu', 'assets/ui/buttonImages/settings2.png');
+        this.load.image('menu', 'assets/ui/buttonImages/menu.png');
         this.load.image('replay', 'assets/ui/buttonImages/replay2.png');
         this.load.image('music', 'assets/ui/buttonImages/music.png');
         this.load.image('sound', 'assets/ui/buttonImages/sound.png');
@@ -20,6 +20,8 @@ export default class PauseScene extends Phaser.Scene {
         );
         this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
         this.load.image('info', 'assets/ui/buttonImages/info.png');
+        this.load.image('settings', 'assets/ui/buttonImages/settings.png');
+
     }
     create() {
 
@@ -58,9 +60,11 @@ export default class PauseScene extends Phaser.Scene {
         //resume text
         this.add.bitmapText(640, 440, 'pixelFont', 'RESUME', 32).setOrigin(0.5);
 
-        // garage button
-        const garageButton = this.createButton(450, 300, 'shop', 0.5, () => {
-            this.scene.lauch('garageScene');
+        // settings button
+        const settingsButton = this.createButton(450, 300, 'settings', 0.6, () => {
+            this.scene.launch('SettingsScene');
+            //bring to top
+            this.scene.bringToTop('SettingsScene');
         });
 
         // Main Menu button

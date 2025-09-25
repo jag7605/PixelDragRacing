@@ -15,7 +15,7 @@ export default class MenuScene extends Phaser.Scene {
 
         //Buttons
         this.load.image('btn_start',    'assets/ui/buttonImages/play2.png');
-        this.load.image('btn_settings', 'assets/ui/buttonImages/settings2.png');
+        this.load.image('btn_settings', 'assets/ui/buttonImages/settings.png');
         this.load.image('btn_garage',   'assets/ui/buttonImages/shop.png');
         this.load.image('info', 'assets/ui/buttonImages/info.png');
 
@@ -55,7 +55,7 @@ export default class MenuScene extends Phaser.Scene {
         const ui = new MenuUi(this);
 
         // Buttons
-        ui.createButton(W/2 - 200, H - 140, 'btn_settings', 'SETTINGS', 0.45, 0.55, () => {
+        ui.createButton(W/2 - 200, H - 140, 'btn_settings', 'SETTINGS', 0.55, 0.65, () => {
             this.scene.pause();
             this.scene.launch('SettingsScene');
         },);
