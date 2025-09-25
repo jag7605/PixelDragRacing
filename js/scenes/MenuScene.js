@@ -56,7 +56,8 @@ export default class MenuScene extends Phaser.Scene {
 
         // Buttons
         ui.createButton(W/2 - 200, H - 140, 'btn_settings', 'SETTINGS', 0.45, 0.55, () => {
-        this.scene.start('SettingsScene');
+            this.scene.pause();
+            this.scene.launch('SettingsScene');
         },);
 
         ui.createButton(W/2, H - 120, 'btn_start', 'START', 0.65, 0.75, () => {
