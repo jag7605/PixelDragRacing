@@ -8,24 +8,35 @@ export default class RaceScene extends Phaser.Scene {
 
     startCountdown() {
         let count = 3;
-        let countdownText = this.add.text(400, 300, count, {
+        let countdownText = this.add.text(400, 300, count-1, {
             fontSize: "80px",
             color: "#fff",
             fontStyle: "bold"
         }).setOrigin(0.5).setScrollFactor(0);
+
+        let countdownBeep = this.sound.add('redBeep', { volume: 0.5 });
+        let goBeep = this.sound.add('goBeep', { volume: 0.5 });
 
         this.time.addEvent({
             delay: 1000,
             repeat: 3,
             callback: () => {
                 if (count > 1) {
-                    count--;
+                    countdownBeep.play();
                     countdownText.setText(count);
-                } else if (count === 1) {
-                    count = 0;
-                    countdownText.setText("GO!");
+                    count--;
+                 } else if (count === 1) {
+                     countdownBeep.play();
+                     countdownText.setText(count);
+                    count--;
                 } else {
-                    countdownText.destroy();
+                    countdownText.setText("GO!");  // Change text to "GO!"
+                    goBeep.play();
+
+                    this.time.delayedCall(500, () => {
+                        countdownText.destroy();
+                    });
+
                     this.raceStarted = true;
                     this.startTime = this.time.now;
 
@@ -60,7 +71,7 @@ export default class RaceScene extends Phaser.Scene {
         this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
 
         // Load both cars for the race scene
-        this.load.spritesheet('beater_car',  'assets/cars/beater_car_ride.png',  {
+        this.load.spritesheet('beater_car', 'assets/cars/beater_car_ride.png', {
             frameWidth: 192,
             frameHeight: 192
         });
@@ -78,16 +89,19 @@ export default class RaceScene extends Phaser.Scene {
         this.load.audio('bgMusic1', 'assets/sound/bgMusic.mp3');
         this.load.audio('bgMusic2', 'assets/sound/bgMusic2.mp3');
         this.load.audio('bgMusic3', 'assets/sound/bgMusic3.mp3');
-        
+
         this.load.image('finishLine', 'assets/backgrounds/Finish_Line.png');
+
+        this.load.audio('redBeep', 'assets/sound/RedBeep.mp3');
+        this.load.audio('goBeep', 'assets/sound/GoBeep.mp3');
     }
 
     create() {
 
         if (!this.registry.get('selectedCar')) {
-        this.registry.set('selectedCar', 'beater_jeep');
+            this.registry.set('selectedCar', 'beater_jeep');
         }
-        
+
         this.playerCar = new Car(this, 150, 410);
         this.botCar = new Bot(this, 150, 310, 0.1);
 
@@ -95,13 +109,13 @@ export default class RaceScene extends Phaser.Scene {
         const makeDriveAnim = (key, fps = 24) => {
             const animKey = `drive_${key}`;
             if (!this.anims.exists(animKey)) {
-            // If you’re unsure of exact frame count, 0..7 works for your current sheets.
-            this.anims.create({
-                key: animKey,
-                frames: this.anims.generateFrameNumbers(key, { start: 0, end: 7 }),
-                frameRate: fps,
-                repeat: -1
-            });
+                // If you’re unsure of exact frame count, 0..7 works for your current sheets.
+                this.anims.create({
+                    key: animKey,
+                    frames: this.anims.generateFrameNumbers(key, { start: 0, end: 7 }),
+                    frameRate: fps,
+                    repeat: -1
+                });
             }
             return animKey;
         };
@@ -111,7 +125,7 @@ export default class RaceScene extends Phaser.Scene {
 
         // Build animations we need
         const playerAnimKey = makeDriveAnim(selectedKey);
-        const botAnimKey    = makeDriveAnim('beater_jeep');
+        const botAnimKey = makeDriveAnim('beater_jeep');
 
         // Swap textures on already-created sprites from Car/Bot (no Car.js changes)
         this.playerCar.sprite.setTexture(selectedKey);
@@ -135,7 +149,7 @@ export default class RaceScene extends Phaser.Scene {
             .setVisible(false);
 
 
-        
+
 
         // === Cars ===
         this.cursors = this.input.keyboard.createCursorKeys();
