@@ -3,9 +3,10 @@ import GearSystem from './GearSystem.js';
 
 // This class represents a car in the game, handling its movement and gear system
 export default class Car {
-    constructor(scene, x, y) { // scene is the Phaser scene, x and y are the initial position of the car
+    constructor(scene, x, y, upgradeStage = 1) { // scene is the Phaser scene, x and y are the initial position of the car, upgradeStage indicates the level of upgrades (1, 2, or 3)
         this.scene = scene; // Reference to the Phaser scene
         this.sprite = scene.add.sprite(x, y, 'car').setScale(1); // Create the car sprite at position (x, y) using the 'car' sprite sheet
+        this.upgradeStage = upgradeStage;  // Store stage of upgrades (1, 2, or 3)
 
         // Set initial car properties
         this.speed = 0; // Initial speed of the car set to 0
@@ -61,7 +62,7 @@ export default class Car {
                 if (this.lastRpmBeforeShift >= 8250 && this.lastRpmBeforeShift <= 8750) {
                     this.perfectShifts++; // Increase perfect shift count
                     // Add small speed boost for perfect shift
-                    this.speed *= 1.05; // 5% speed boost for perfect shift
+                    this.speed *= 1.02; // 2% speed boost for perfect shift
                 }
                 this.rpm *= 0.6; // Drop RPM on upshift (going to a higher gear means lower RPM)
                 this.acceleration *= 0.7; // Reduce acceleration curve after upshift
@@ -76,26 +77,34 @@ export default class Car {
             }
         }
 
-        // Acceleration
-        this.isAccelerating = cursors.up.isDown; // if the up arrow key is pressed,
-        if (this.isAccelerating && this.gearSystem.currentGear > 0) {
-            // RPM build rate per second, scaled by gear ratio for realistic feel
-            const rpmBuildRate = 2470 * (this.gearSystem.getGearRatio() / 2.47); // rpm build rate based on gear ratio value
-            this.rpm += rpmBuildRate * (delta / 1000); // RPM build rate per second
-            if (this.rpm > this.maxRPM) this.rpm = this.maxRPM; // Limit the RPM to the maximum while accelerating 
+        // Calculate acceleration based on RPM and gear. Added powerFactor to scale with upgrade stage.
+        let torque;
+        const powerFactor = [0, 0.6, 1.0, 1.4][this.upgradeStage];  // Custom scale: 0.6 for stage 1, 1.0 for 2, 1.4 for 3
+        if (this.upgradeStage === 1) {
+            torque = (this.rpm / this.maxRPM) * 18 * powerFactor;  // Stage 1: Base 18, scaled to 10.8
+        } else if (this.upgradeStage === 2) {
+            torque = (this.rpm / this.maxRPM) * 15 * powerFactor;  // Stage 2: Base 15, scaled to 15.0
         } else {
-            this.rpm -= 1200 * (delta / 1000); // Reduced decay rate for smoother idle return
-            if (this.rpm < 800) this.rpm = 800; // Idle RPM (If a car is on, there has to be some RPM, so this is the minimum I have chosen)
+            torque = (this.rpm / this.maxRPM) * 22 * powerFactor;  // Stage 3: Base 22, scaled to 30.8
         }
 
-        // Calculate acceleration based on RPM and gear
-        const torque = (this.rpm / this.maxRPM) * 15; // Increased torque multiplier for better low-end power
-        // The acceleration is calculated by multiplying the torque by the gear ratio, which gives a realistic acceleration value based on the current gear.
         this.acceleration = torque * this.gearSystem.getGearRatio();
 
-        // Limit speed based on gear ratio (lower gears allow for more acceleration but less top speed)
-        const maxSpeedPerGear = 290 / this.gearSystem.getGearRatio(); // Slightly increased max speed base
-        // Example: The top speed in gear 1 is 290 / 2.47 = 117.5 km/h, in gear 2 is 290 / 1.85 = 156.8 km/h, etc.
+        // Acceleration with RPM build rate scaled by powerFactor
+        this.isAccelerating = cursors.up.isDown;
+        if (this.isAccelerating && this.gearSystem.currentGear > 0) {
+            const rpmBuildRate = 2470 * (this.gearSystem.getGearRatio() / 2.47) * powerFactor;  // Scale RPM build
+            this.rpm += rpmBuildRate * (delta / 1000);
+            if (this.rpm > this.maxRPM) this.rpm = this.maxRPM;
+        } else {
+            this.rpm -= 1200 * (delta / 1000); // Reduced decay rate for smoother idle return
+            if (this.rpm < 800) this.rpm = 800; // Idle RPM
+        }
+
+        // Scale base speed by upgrade stage (all stages have the same top speed, only acceleration (torque) is improved through upgrades)
+        const maxSpeedTops = [0, 280, 280, 280];  // Cap at 280 to match speedometer
+        const maxSpeedBase = maxSpeedTops[this.upgradeStage] * 1.04;  // e.g., 280 * 1.04 ≈ 291.2
+        const maxSpeedPerGear = maxSpeedBase / this.gearSystem.getGearRatio();
         if (this.speed > maxSpeedPerGear) this.speed = maxSpeedPerGear;
 
         // Add a subtle bounce effect if RPM exceeds maxRPM
@@ -300,5 +309,6 @@ export default class Car {
         this.shiftCount = 0; // reset shift count
         this.perfectShifts = 0; // reset perfect shift count
         this.lastRpmBeforeShift = 0; // reset last RPM before shift
+        this.upgradeStage = this.scene.registry.get('upgrades')[this.scene.registry.get('selectedCar')] || 1;  // Reload if needed
     }
 }

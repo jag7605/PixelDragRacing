@@ -8,7 +8,7 @@ export default class RaceScene extends Phaser.Scene {
 
     startCountdown() {
         let count = 3;
-        let countdownText = this.add.text(400, 300, count-1, {
+        let countdownText = this.add.text(400, 300, count - 1, {
             fontSize: "80px",
             color: "#fff",
             fontStyle: "bold"
@@ -25,9 +25,9 @@ export default class RaceScene extends Phaser.Scene {
                     countdownBeep.play();
                     countdownText.setText(count);
                     count--;
-                 } else if (count === 1) {
-                     countdownBeep.play();
-                     countdownText.setText(count);
+                } else if (count === 1) {
+                    countdownBeep.play();
+                    countdownText.setText(count);
                     count--;
                 } else {
                     countdownText.setText("GO!");  // Change text to "GO!"
@@ -102,7 +102,11 @@ export default class RaceScene extends Phaser.Scene {
             this.registry.set('selectedCar', 'beater_jeep');
         }
 
-        this.playerCar = new Car(this, 150, 410);
+        const selectedKey = this.registry.get('selectedCar') || 'beater_jeep';
+        const upgrades = this.registry.get('upgrades') || {};
+        const upgradeStage = upgrades[selectedKey] || 1;
+
+        this.playerCar = new Car(this, 150, 410, upgradeStage);
         this.botCar = new Bot(this, 150, 310, 0.1);
 
         // Helper: ensure an animation exists for a given spritesheet key
@@ -120,9 +124,8 @@ export default class RaceScene extends Phaser.Scene {
             return animKey;
         };
 
-        // Pull selection from the Garage registry (fallback to jeep if none)
-        const selectedKey = this.registry.get('selectedCar') || 'beater_jeep';
 
+        
         // Build animations we need
         const playerAnimKey = makeDriveAnim(selectedKey);
         const botAnimKey = makeDriveAnim('beater_jeep');

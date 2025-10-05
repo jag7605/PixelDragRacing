@@ -11,6 +11,7 @@ export default class DevSceneSwitch extends Phaser.Scene {
             'BootScene',
             'EndScene',
             'MenuScene',
+            'GarageScene',
             'PauseScene',
             'RaceScene'
         ];
@@ -36,7 +37,7 @@ export default class DevSceneSwitch extends Phaser.Scene {
                 this.scene.start(sceneKey);
             });
 
-            y += 100;
+            y += 85;
         });
     }
 }

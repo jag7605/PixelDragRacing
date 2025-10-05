@@ -39,4 +39,11 @@ const config = {
 // Create a new Phaser game instance
 const game = new Phaser.Game(config);
 
+// Initialize upgrades in registry (per car, default stage 1)
+game.registry.set('upgrades', {
+    'beater_car': 1,
+    'beater_jeep': 1
+    // Will likely add more cars here later
+});
+
 console.log('Game initialized'); // Debug log to confirm game starts
