@@ -5,32 +5,6 @@ export default class MenuScene extends Phaser.Scene {
         super({ key: 'MenuScene' });
     }
 
-    preload() {
-        // Background
-        this.load.image('sky', 'assets/backgrounds/sky_day_1440x1080.png');
-        this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
-
-        //Logo
-        this.load.image('gameLogo', 'assets/ui/gameLogo/PDRlogo.png'); 
-
-        //Buttons
-        this.load.image('btn_start',    'assets/ui/buttonImages/play2.png');
-        this.load.image('btn_settings', 'assets/ui/buttonImages/settings.png');
-        this.load.image('btn_garage',   'assets/ui/buttonImages/shop.png');
-        this.load.image('info', 'assets/ui/buttonImages/info.png');
-
-        // Pixel font
-        this.load.bitmapFont('pixelFont', 'assets/ui/font/font.png', 'assets/ui/font/font.xml');
-
-        //cloud
-        this.load.image('cloud', 'assets/backgrounds/pixel_cloud.png');
-
-        // Sound
-        this.load.audio('clickSound', 'assets/sound/button_click.mp3');
-        this.load.audio('hoverSound', 'assets/sound/hover_button.mp3');
-
-    }
-
     create() {
 
         const { width: W, height: H } = this.scale;

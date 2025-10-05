@@ -66,36 +66,6 @@ export default class RaceScene extends Phaser.Scene {
         });
     }
 
-    preload() {
-        this.load.image('sky', 'assets/backgrounds/sky_day_1440x1080.png');
-        this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
-
-        // Load both cars for the race scene
-        this.load.spritesheet('beater_car', 'assets/cars/beater_car_ride.png', {
-            frameWidth: 192,
-            frameHeight: 192
-        });
-
-        this.load.spritesheet('beater_jeep', 'assets/cars/beater_jeep_ride.png', {
-            frameWidth: 256,
-            frameHeight: 256
-        });
-
-        this.load.image('rpmDial', 'assets/Speedometer/RPM.png');
-        this.load.image('mphDial', 'assets/Speedometer/MPH.png');
-
-        this.load.image('pauseButton', 'assets/ui/buttonImages/pause2.png');
-        this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
-        this.load.audio('bgMusic1', 'assets/sound/bgMusic.mp3');
-        this.load.audio('bgMusic2', 'assets/sound/bgMusic2.mp3');
-        this.load.audio('bgMusic3', 'assets/sound/bgMusic3.mp3');
-
-        this.load.image('finishLine', 'assets/backgrounds/Finish_Line.png');
-
-        this.load.audio('redBeep', 'assets/sound/RedBeep.mp3');
-        this.load.audio('goBeep', 'assets/sound/GoBeep.mp3');
-    }
-
     create() {
 
         if (!this.registry.get('selectedCar')) {

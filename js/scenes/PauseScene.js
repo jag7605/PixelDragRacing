@@ -2,27 +2,6 @@ export default class PauseScene extends Phaser.Scene {
     constructor() {
         super('PauseScene');
     }
-
-    preload() {
-        this.load.image('yellowSquare', 'assets/ui/yellowSquare.png');
-        this.load.image('play', 'assets/ui/buttonImages/play2.png');
-        this.load.image('menu', 'assets/ui/buttonImages/menu.png');
-        this.load.image('replay', 'assets/ui/buttonImages/replay2.png');
-        this.load.image('music', 'assets/ui/buttonImages/music.png');
-        this.load.image('sound', 'assets/ui/buttonImages/sound.png');
-        this.load.image('shop', 'assets/ui/buttonImages/shop.png');
-        this.load.image('title', 'assets/ui/title.png');
-        this.load.image('resume', 'assets/ui/resume.png');
-        this.load.bitmapFont(
-            'pixelFont',
-            'assets/ui/font/font.png',
-            'assets/ui/font/font.xml'  
-        );
-        this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
-        this.load.image('info', 'assets/ui/buttonImages/info.png');
-        this.load.image('settings', 'assets/ui/buttonImages/settings.png');
-
-    }
     create() {
 
         //Full-screen semi-transparent background
@@ -48,7 +27,7 @@ export default class PauseScene extends Phaser.Scene {
         }
         
         //resume button
-        const resumeButton = this.createButton(640, 440, 'resume', 0.6, () => {
+        const resumeButton = this.createButton(640, 440, 'btn_resume', 0.6, () => {
             if (raceScene.raceStarted) {
                 const pauseDuration = this.time.now - raceScene.pauseStartTime;
                 raceScene.totalPausedTime += pauseDuration;
@@ -61,7 +40,7 @@ export default class PauseScene extends Phaser.Scene {
         this.add.bitmapText(640, 440, 'pixelFont', 'RESUME', 32).setOrigin(0.5);
 
         // settings button
-        const settingsButton = this.createButton(450, 300, 'settings', 0.6, () => {
+        const settingsButton = this.createButton(450, 300, 'btn_settings', 0.6, () => {
             this.scene.launch('SettingsScene');
             //bring to top
             this.scene.bringToTop('SettingsScene');

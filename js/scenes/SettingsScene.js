@@ -2,20 +2,6 @@ export default class SettingsScene extends Phaser.Scene {
     constructor() {
         super('SettingsScene');
     }
-
-    preload() {
-        this.load.image('yellowSquare', 'assets/ui/yellowSquare.png');
-        this.load.image('music', 'assets/ui/buttonImages/music.png');
-        this.load.image('sound', 'assets/ui/buttonImages/sound.png');
-        this.load.image('title', 'assets/ui/title.png');
-        this.load.bitmapFont(
-            'pixelFont',
-            'assets/ui/font/font.png',
-            'assets/ui/font/font.xml'  
-        );
-        this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
-        this.load.image('info', 'assets/ui/buttonImages/info.png');
-    }
     create() {
 
         //Full-screen semi-transparent background

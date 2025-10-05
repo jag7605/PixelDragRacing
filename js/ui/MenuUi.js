@@ -3,12 +3,10 @@ export default class MenuUi {
     this.scene = scene;
 
   // Preload sound into scene so they’re ready
-    this.clickSound = this.scene.sound.add('clickSound');
+    this.clickSound = this.scene.sound.add('buttonSound');
     this.hoverSound = this.scene.sound.add('hoverSound');
 
   }
-
-  
 
   createButton(x, y, textureKey, label, baseScale, hoverScale, onClick, labelOffsetY = 75) {
     const btn = this.scene.add.image(x, y, textureKey)

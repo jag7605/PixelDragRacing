@@ -2,17 +2,6 @@ export default class InfoScene extends Phaser.Scene {
     constructor() {
         super('InfoScene');
 }
-
-    preload() {
-        this.load.image('title', 'assets/ui/title.png');
-        this.load.image('yellowSquare', 'assets/ui/yellowSquare.png');
-        this.load.bitmapFont(
-            'pixelFont',
-            'assets/ui/font/font.png',
-            'assets/ui/font/font.xml'  
-        );
-        this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
-    }
     create() {
 
         //Full-screen semi-transparent background

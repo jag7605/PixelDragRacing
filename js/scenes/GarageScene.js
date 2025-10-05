@@ -3,28 +3,6 @@ export default class GarageScene extends Phaser.Scene {
     super({ key: 'GarageScene' });
   }
 
-  preload() {
-
-    this.load.bitmapFont('pix', 'assets/ui/font/font.png', 'assets/ui/font/font.xml');
-
-    this.load.image('btn_title', 'assets/ui/title.png');   // for "Back"
-    this.load.image('btn_resume', 'assets/ui/resume.png');  // for "Select" and other buttons to be added later
-    this.load.image('btn_settings', 'assets/ui/buttonImages/settings.png'); // icon for settings button
-
-    // === Backgrounds ===
-    this.load.image('garage_bg', 'assets/backgrounds/garage_bg.jpg');       // clear
-    this.load.image('garage_bg_blur', 'assets/backgrounds/garage_bg_blur.jpg'); // blurred
-
-    this.load.spritesheet('beater_car', 'assets/cars/beater_car_ride.png', {
-      frameWidth: 192,
-      frameHeight: 192
-    });
-    this.load.spritesheet('beater_jeep', 'assets/cars/beater_jeep_ride.png', {
-      frameWidth: 256,
-      frameHeight: 256
-    });
-  }
-
   create() {
     const { width: W, height: H } = this.scale;
 
@@ -60,12 +38,12 @@ export default class GarageScene extends Phaser.Scene {
     this.bgBlur.setVisible(true);
     this.bgClear.setVisible(false);
 
-    this.add.bitmapText(W / 2, 60 + 2, 'pix', 'Garage', 48)
+    this.add.bitmapText(W / 2, 60 + 2, 'pixelFont', 'Garage', 48)
       .setOrigin(0.5)
       .setTint(0x000000)
       .setAlpha(0.5);
 
-    this.add.bitmapText(W / 2, 60, 'pix', 'Garage', 48)
+    this.add.bitmapText(W / 2, 60, 'pixelFont', 'Garage', 48)
       .setOrigin(0.5)
       .setTint(0xffffff);
 
@@ -128,12 +106,12 @@ export default class GarageScene extends Phaser.Scene {
 
       // --- Car label ---
       const labelY = cardH / 2 - nameOffset;
-      const labelShadow = this.add.bitmapText(0, labelY + 2, 'pix', car.name, 22)
+      const labelShadow = this.add.bitmapText(0, labelY + 2, 'pixelFont', car.name, 22)
         .setOrigin(0.5)
         .setTint(0x000000)
         .setAlpha(0.5);
 
-      const label = this.add.bitmapText(0, labelY, 'pix', car.name, 22)
+      const label = this.add.bitmapText(0, labelY, 'pixelFont', car.name, 22)
         .setOrigin(0.5)
         .setTint(0xffffff);
 
@@ -166,12 +144,12 @@ export default class GarageScene extends Phaser.Scene {
 
     // Back to Menu
     const backY = H - 40;
-    const backShadow = this.add.bitmapText(W / 2, backY + 2, 'pix', 'Back to Menu', 26)
+    const backShadow = this.add.bitmapText(W / 2, backY + 2, 'pixelFont', 'Back to Menu', 26)
       .setOrigin(0.5)
       .setTint(0x000000)
       .setAlpha(0.5);
 
-    const back = this.add.bitmapText(W / 2, backY, 'pix', 'Back to Menu', 26)
+    const back = this.add.bitmapText(W / 2, backY, 'pixelFont', 'Back to Menu', 26)
       .setOrigin(0.5)
       .setTint(0xff5a5a)
       .setInteractive({ useHandCursor: true });
@@ -218,9 +196,9 @@ export default class GarageScene extends Phaser.Scene {
       img.setScale(s);
 
       // label 
-      const txtShadow = this.add.bitmapText(0, 4, 'pix', label, 26)
+      const txtShadow = this.add.bitmapText(0, 4, 'pixelFont', label, 26)
         .setOrigin(0.5).setTint(0x000000).setAlpha(0.5);
-      const txt = this.add.bitmapText(0, 0, 'pix', label, 26)
+      const txt = this.add.bitmapText(0, 0, 'pixelFont', label, 26)
         .setOrigin(0.5).setTint(tint);
 
       const w = img.displayWidth, h = img.displayHeight;
@@ -235,7 +213,7 @@ export default class GarageScene extends Phaser.Scene {
       return btn;
     };
 
-    const backBtn = makeButton(100, H - 52, 'btn_title', 'Back', 0xffffff, () => {
+    const backBtn = makeButton(100, H - 52, 'title', 'Back', 0xffffff, () => {
       this.buildGallery();
     });
     const selectBtn = makeButton(W - 120, H - 52, 'btn_resume', 'RACE!', 0x00e676, () => {
@@ -251,7 +229,7 @@ export default class GarageScene extends Phaser.Scene {
     const currentStage = upgrades[car.key] || 1;
 
     // New: Display current stage and max speed in top left (smaller, compact)
-    const stageText = this.add.bitmapText(20, 50, 'pix',
+    const stageText = this.add.bitmapText(20, 50, 'pixelFont',
       `Car: ${car.name}
     \nCurrent Upgrade Stage: ${currentStage}/3
     \n0 - 100 Time: ${[0, 7, 4, 2.5][currentStage]} Seconds`, 20)
@@ -261,7 +239,7 @@ export default class GarageScene extends Phaser.Scene {
     this.activeItems.push(stageText);
 
     // Placeholder for cash and level at the bottom of the screen
-    const cashLevelText = this.add.bitmapText(W / 2, H - 20, 'pix',
+    const cashLevelText = this.add.bitmapText(W / 2, H - 20, 'pixelFont',
       `Cash: \$0\n\nLevel: 1`, 20)
       .setOrigin(0.5, 1)  // Align to bottom center
       .setDropShadow(2, 2, 0x000000, 0.5)  // Subtle shadow for consistency
@@ -276,7 +254,7 @@ export default class GarageScene extends Phaser.Scene {
       const s = targetHeight / upgradeBtnImg.height;
       upgradeBtnImg.setScale(s);
 
-      const upgradeText = this.add.bitmapText(0, 0, 'pix', `Upgrade to Stage ${currentStage + 1}`, 26.5)
+      const upgradeText = this.add.bitmapText(0, 0, 'pixelFont', `Upgrade to Stage ${currentStage + 1}`, 26.5)
         .setOrigin(0.5)
         .setDropShadow(2, 2, 0x000000, 0.5)  // Subtle shadow like stats
         .setTint(0xffd700);
@@ -307,14 +285,14 @@ export default class GarageScene extends Phaser.Scene {
         // Create confirmation window
         const confirmWindow = this.add.container(W / 2, H / 2);
         const background = this.add.rectangle(0, 0, 700, 200, 0x000000, 0.8).setOrigin(0.5);
-        const confirmText = this.add.bitmapText(0, -40, 'pix', `Confirm Upgrade to Stage ${currentStage + 1}?`, 24).setOrigin(0.5).setTint(0xffffff);
+        const confirmText = this.add.bitmapText(0, -40, 'pixelFont', `Confirm Upgrade to Stage ${currentStage + 1}?`, 24).setOrigin(0.5).setTint(0xffffff);
 
         const yesButton = makeButton(100, 40, 'btn_resume', 'Yes', 0x00e676, () => {
           upgrades[car.key] = currentStage + 1;
           this.registry.set('upgrades', upgrades);
           confirmWindow.destroy();  // Remove confirmation window
           // Add upgrade notification
-          const notifyText = this.add.bitmapText(W / 2, H / 2, 'pix', `UPGRADED TO STAGE ${currentStage + 1}!`, 36)
+          const notifyText = this.add.bitmapText(W / 2, H / 2, 'pixelFont', `UPGRADED TO STAGE ${currentStage + 1}!`, 36)
             .setOrigin(0.5)
             .setTint(0x00ff00)
             .setAlpha(0)
@@ -341,7 +319,7 @@ export default class GarageScene extends Phaser.Scene {
           this.showDetail(car);  // Refresh view
         });
 
-        const noButton = makeButton(-100, 40, 'btn_title', 'No', 0xff5a5a, () => {
+        const noButton = makeButton(-100, 40, 'title', 'No', 0xff5a5a, () => {
           confirmWindow.destroy();  // Remove confirmation window
         });
 
@@ -351,7 +329,7 @@ export default class GarageScene extends Phaser.Scene {
 
       this.activeItems.push(upgradeBtn);
     } else {
-      const maxedText = this.add.bitmapText(W - 20, 50, 'pix', 'Max Stage Reached', 20)
+      const maxedText = this.add.bitmapText(W - 20, 50, 'pixelFont', 'Max Stage Reached', 20)
         .setOrigin(1, 0)  // Align to top right
         .setDropShadow(2, 2, 0x000000, 0.5)
         .setTint(0xffd700);

@@ -3,15 +3,6 @@ export default class EndScene extends Phaser.Scene {
         super('EndScene');
     }
 
-    preload() {
-        this.load.bitmapFont(
-            'pixelFont',
-            'assets/ui/font/font.png',
-            'assets/ui/font/font.xml'  
-        );
-        this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
-    }
-
     create() {
         const raceScene = this.scene.get('RaceScene');
 

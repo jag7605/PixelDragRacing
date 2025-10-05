@@ -24,8 +24,8 @@ const config = {
         default: 'arcade', // Simple physics system for 2D movement
     },
     scene: [
-        DevSceneSwitch, // Start with the dev switcher
         BootScene,
+        DevSceneSwitch,
         EndScene,
         MenuScene,
         PauseScene,
