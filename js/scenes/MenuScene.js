@@ -84,6 +84,11 @@ export default class MenuScene extends Phaser.Scene {
             };
             this.registry.set("playerData", playerData);
         }
+
+        //display money
+        this.add.image(30, 30, 'moneyIcon').setScale(0.03);
+        this.add.bitmapText(70,  32, 'pixelFont', `$${playerData.currency.toString()}`, 24).setOrigin(0, 0.5);
+
   }
 
         

@@ -22,6 +22,7 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('yellowSquare', 'assets/ui/yellowSquare.png');
     this.load.image('title', 'assets/ui/title.png');
     this.load.bitmapFont('pixelFont', 'assets/ui/font/font.png', 'assets/ui/font/font.xml');
+    this.load.image('moneyIcon', 'assets/ui/dollar.png');
 
     //buttons
     this.load.image('btn_start', 'assets/ui/buttonImages/play2.png');
