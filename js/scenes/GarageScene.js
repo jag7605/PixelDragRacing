@@ -1,351 +1,373 @@
+import {savePlayerDataFromScene} from '../utils/playerData.js';
 export default class GarageScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GarageScene' });
   }
 
   create() {
-    const { width: W, height: H } = this.scale;
+    this.selectedCarKey = this.registry.get('selectedCar');
+    let playerData = this.registry.get("playerData");
 
-    // === Backgrounds (created once, toggled later) ===
-    this.bgClear = this.add.image(W / 2, H / 2, 'garage_bg')
-      .setDisplaySize(W, H)
-      .setDepth(-10)
-      .setVisible(false);
+    // Background and title
+    this.add.image(640, 360, 'garage_bg');
+    this.add.image(640, 100, 'title').setOrigin(0.5).setScale(0.9);
+    this.add.bitmapText(645, 105, 'pixelFont', 'GARAGE', 40).setOrigin(0.5);
 
-    this.bgBlur = this.add.image(W / 2, H / 2, 'garage_bg_blur')
-      .setDisplaySize(W, H)
-      .setDepth(-10)
-      .setVisible(true);
-
-    // Catalog: add more cars here easily
-    this.catalog = [
-      { key: 'beater_car', name: 'Beater Car', baseMaxSpeed: 280 },
-      { key: 'beater_jeep', name: 'Beater Jeep', baseMaxSpeed: 280 }
+    // Car definitions
+    this.cars = [
+        { key: 'beater_car', scale: 1.6, y: -20, cost: 0, level: 1, stage: 1, maxStage: 3 },
+        { key: 'beater_jeep', scale: 1, y: 0, cost: 0, level: 1, stage: 1, maxStage: 3 },
     ];
 
-    // Start in gallery mode
-    this.buildGallery();
+    this.largeCar = null;
+    this.selectButton = null;
+    this.startButton = null;
+    this.checkMark = null;
+    this.checkMarkBox = null;
+    this.selectBG = null;
 
+    //display money
+    
+    this.add.image(30, 30, 'moneyIcon').setScale(0.03);
+    this.moneyText = this.add.bitmapText(70, 20, 'pixelFont', `$${playerData.currency}`, 20).setOrigin(0, 0);
 
-  }
+    // Scroll container
+    this.carContainer = this.add.container(640, 550); // centered at bottom
+    //set mask for start button
+    const shape = this.make.graphics();
+    shape.fillStyle(0xffffff);
+    shape.fillRect(100, 0, 880, 720); // x, y, width, height
+    const mask = shape.createGeometryMask();
+    this.carContainer.setMask(mask);
 
-  //Gallery (grid)
-  buildGallery() {
-    const { width: W, height: H } = this.scale;
-    this.clearScene();
+    this.carOffsetX = 0;
 
-    // toggle backgrounds
-    this.bgBlur.setVisible(true);
-    this.bgClear.setVisible(false);
+    const spacing = 300; // distance between cars
+    this.unlockedCars = this.registry.get("playerData").unlockedCars;
+    this.cars.forEach((car, index) => {
+        const x = index * spacing;
+        const unlocked = playerData.unlockedCars.find(c => c[0] === car.key);
+        
+        // background box
+        const box = this.add.image(x, 90, 'box').setOrigin(0.5).setScale(1.2, 0.5);
 
-    this.add.bitmapText(W / 2, 60 + 2, 'pixelFont', 'Garage', 48)
-      .setOrigin(0.5)
-      .setTint(0x000000)
-      .setAlpha(0.5);
+        //coloured box for selected car
+        car.boxX = x;
+        car.boxY = 90;
 
-    this.add.bitmapText(W / 2, 60, 'pixelFont', 'Garage', 48)
-      .setOrigin(0.5)
-      .setTint(0xffffff);
-
-
-    // Grid settings
-    const cols = 3; // number of columns
-    const cellW = 280; // horizontal spacing
-    const cellH = 260; // vertical spacing
-    const startX = W / 2 - ((cols - 1) * cellW) / 2;
-    const startY = 180;
-
-    // Card style
-    const cardW = 260;
-    const cardH = 160;
-    const radius = 20;
-    const thumbScale = 0.7;    // thumbnail scale
-    const nameOffset = 40;  // text distance from car image
-
-    const CAR_Y_SHIFT = -60;
-
-    this.galleryItems = [];
-
-    this.catalog.forEach((car, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-
-      const x = startX + col * cellW;
-      const y = startY + row * cellH;
-
-      // --- Card container ---
-      const card = this.add.container(x, y);
-      card.setDepth(1);
-      this.galleryItems.push(card);
-
-      // --- Shadow ---
-      const shadow = this.add.graphics();
-      shadow.fillStyle(0x000000, 0.25);
-      shadow.fillRoundedRect(-cardW / 2 + 6, -cardH / 2 + 8, cardW, cardH, radius);
-      card.add(shadow);
-
-      // --- Card background ---
-      const bg = this.add.graphics();
-      bg.fillStyle(0xEBD97A, 0.95); // yellow
-      bg.lineStyle(3, 0xC8B765, 1); // darker outline
-      bg.fillRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, radius);
-      bg.strokeRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, radius);
-      card.add(bg);
-
-      // Mask (clip inside rounded card) 
-      const maskG = this.make.graphics({ x: x, y: y, add: false });
-      maskG.fillStyle(0xffffff, 1);
-      maskG.fillRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, radius);
-      const mask = maskG.createGeometryMask();
-      card.setMask(mask);
-
-      // Use a SPRITE and lock to frame 0 so it's just one car
-      const thumb = this.add.sprite(0, CAR_Y_SHIFT, car.key, 0)
-        .setScale(thumbScale);
-      card.add(thumb);
-
-      // --- Car label ---
-      const labelY = cardH / 2 - nameOffset;
-      const labelShadow = this.add.bitmapText(0, labelY + 2, 'pixelFont', car.name, 22)
-        .setOrigin(0.5)
-        .setTint(0x000000)
-        .setAlpha(0.5);
-
-      const label = this.add.bitmapText(0, labelY, 'pixelFont', car.name, 22)
-        .setOrigin(0.5)
-        .setTint(0xffffff);
-
-      card.add(labelShadow);
-      card.add(label);
-
-      // --- Interactive zone ---
-      const hit = this.add.zone(0, 0, cardW, cardH).setOrigin(0.5).setInteractive({ useHandCursor: true });
-      card.add(hit);
-
-      hit.on('pointerover', () => {
-        this.tweens.add({ targets: card, scale: 1.06, duration: 120, ease: 'Quad.easeOut' });
-        bg.clear();
-        bg.fillStyle(0xEDE089, 0.98);
-        bg.lineStyle(3, 0x9C8E48, 1);
-        bg.fillRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, radius);
-        bg.strokeRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, radius);
-      });
-      hit.on('pointerout', () => {
-        this.tweens.add({ targets: card, scale: 1.0, duration: 120, ease: 'Quad.easeOut' });
-        bg.clear();
-        bg.fillStyle(0xEBD97A, 0.95);
-        bg.lineStyle(3, 0xC8B765, 1);
-        bg.fillRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, radius);
-        bg.strokeRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, radius);
-      });
-
-      hit.on('pointerdown', () => this.showDetail(car));
-    });
-
-    // Back to Menu
-    const backY = H - 40;
-    const backShadow = this.add.bitmapText(W / 2, backY + 2, 'pixelFont', 'Back to Menu', 26)
-      .setOrigin(0.5)
-      .setTint(0x000000)
-      .setAlpha(0.5);
-
-    const back = this.add.bitmapText(W / 2, backY, 'pixelFont', 'Back to Menu', 26)
-      .setOrigin(0.5)
-      .setTint(0xff5a5a)
-      .setInteractive({ useHandCursor: true });
-
-    back.on('pointerdown', () => this.scene.start('MenuScene'));
-
-    this.galleryItems.push(backShadow, back);
-  }
-
-  // Detail (single car view)
-  showDetail(car) {
-    const { width: W, height: H } = this.scale;
-    this.clearScene();
-
-    // toggle backgrounds
-    this.bgClear.setVisible(true);
-    this.bgBlur.setVisible(false);
-
-    // Big view of car
-    const FLOOR_Y = H - 40;
-    const TARGET_H = H * 1;
-    const PAD_X = 120;
-    const BOOST = 1.8;
-
-    // anchor bottom-center so wheels rest on the floor line
-    this.detailSprite = this.add.sprite(W / 2, FLOOR_Y, car.key, 0)
-      .setOrigin(0.5, 1);
-
-    const frameW = this.detailSprite.frame.width;
-    const frameH = this.detailSprite.frame.height;
-    const maxW = W - PAD_X * 2;
-
-    // fit by both height and width
-    const scale = Math.min(TARGET_H / frameH, maxW / frameW) * BOOST;
-
-    this.detailSprite.setScale(scale);
-
-    // labeled image button in a container
-    const makeButton = (x, y, key, label, tint, onClick, targetH = 58) => {
-      const img = this.add.image(0, 0, key).setOrigin(0.5);
-
-      // scale image to a target height for consistent size
-      const s = targetH / img.height;
-      img.setScale(s);
-
-      // label 
-      const txtShadow = this.add.bitmapText(0, 4, 'pixelFont', label, 26)
-        .setOrigin(0.5).setTint(0x000000).setAlpha(0.5);
-      const txt = this.add.bitmapText(0, 0, 'pixelFont', label, 26)
-        .setOrigin(0.5).setTint(tint);
-
-      const w = img.displayWidth, h = img.displayHeight;
-      const btn = this.add.container(x, y, [img, txtShadow, txt])
-        .setSize(w, h)
-        .setInteractive({ useHandCursor: true });
-
-      // simple hover effect
-      btn.on('pointerover', () => this.tweens.add({ targets: btn, scale: 1.05, duration: 100 }));
-      btn.on('pointerout', () => this.tweens.add({ targets: btn, scale: 1.00, duration: 100 }));
-      btn.on('pointerdown', onClick);
-      return btn;
-    };
-
-    const backBtn = makeButton(100, H - 52, 'title', 'Back', 0xffffff, () => {
-      this.buildGallery();
-    });
-    const selectBtn = makeButton(W - 120, H - 52, 'btn_resume', 'RACE!', 0x00e676, () => {
-      this.registry.set('selectedCar', car.key);
-      this.scene.start('RaceScene');
-    });
-
-    // make sure they get cleaned up
-    this.activeItems = [this.detailSprite, backBtn, selectBtn];
-
-    // Fetch current stage from registry
-    const upgrades = this.registry.get('upgrades') || {};
-    const currentStage = upgrades[car.key] || 1;
-
-    // New: Display current stage and max speed in top left (smaller, compact)
-    const stageText = this.add.bitmapText(20, 50, 'pixelFont',
-      `Car: ${car.name}
-    \nCurrent Upgrade Stage: ${currentStage}/3
-    \n0 - 100 Time: ${[0, 7, 4, 2.5][currentStage]} Seconds`, 20)
-      .setOrigin(0, 0)  // Align to top left
-      .setDropShadow(2, 2, 0x000000, 0.5)
-      .setTint(0xffffff);
-    this.activeItems.push(stageText);
-
-    // Placeholder for cash and level at the bottom of the screen
-    const cashLevelText = this.add.bitmapText(W / 2, H - 20, 'pixelFont',
-      `Cash: \$0\n\nLevel: 1`, 20)
-      .setOrigin(0.5, 1)  // Align to bottom center
-      .setDropShadow(2, 2, 0x000000, 0.5)  // Subtle shadow for consistency
-      .setTint(0xffffff);
-    this.activeItems.push(cashLevelText);
-
-    // New: Upgrade button in top right (ensure text fits, adjust scale)
-    if (currentStage < 3) {
-      const targetHeight = 40;  // Smaller button height
-      // Custom button creation without shadow
-      const upgradeBtnImg = this.add.image(0, 0, 'btn_resume').setOrigin(0.5);
-      const s = targetHeight / upgradeBtnImg.height;
-      upgradeBtnImg.setScale(s);
-
-      const upgradeText = this.add.bitmapText(0, 0, 'pixelFont', `Upgrade to Stage ${currentStage + 1}`, 26.5)
-        .setOrigin(0.5)
-        .setDropShadow(2, 2, 0x000000, 0.5)  // Subtle shadow like stats
-        .setTint(0xffd700);
-
-      const upgradeBtn = this.add.container(W - 200, 100, [upgradeBtnImg, upgradeText])
-        .setSize(upgradeBtnImg.displayWidth, targetHeight)
-        .setInteractive({ useHandCursor: true });
-
-      // Set initial scale explicitly
-      const btnScale = 0.75;  // Consistent scale
-      upgradeBtn.setScale(btnScale);
-      upgradeBtn.list.forEach(item => item.setScale(btnScale));  // Scale all elements
-
-      // Hover effect
-      upgradeBtn.on('pointerover', () => this.tweens.add({
-        targets: upgradeBtn,
-        scale: btnScale * 1.05,  // Scale from initial size
-        duration: 100,
-        ease: 'Quad.easeOut'
-      }));
-      upgradeBtn.on('pointerout', () => this.tweens.add({
-        targets: upgradeBtn,
-        scale: btnScale,  // Back to initial size
-        duration: 100,
-        ease: 'Quad.easeOut'
-      }));
-      upgradeBtn.on('pointerdown', () => {
-        // Create confirmation window
-        const confirmWindow = this.add.container(W / 2, H / 2);
-        const background = this.add.rectangle(0, 0, 700, 200, 0x000000, 0.8).setOrigin(0.5);
-        const confirmText = this.add.bitmapText(0, -40, 'pixelFont', `Confirm Upgrade to Stage ${currentStage + 1}?`, 24).setOrigin(0.5).setTint(0xffffff);
-
-        const yesButton = makeButton(100, 40, 'btn_resume', 'Yes', 0x00e676, () => {
-          upgrades[car.key] = currentStage + 1;
-          this.registry.set('upgrades', upgrades);
-          confirmWindow.destroy();  // Remove confirmation window
-          // Add upgrade notification
-          const notifyText = this.add.bitmapText(W / 2, H / 2, 'pixelFont', `UPGRADED TO STAGE ${currentStage + 1}!`, 36)
+        car.colourBox = this.add.rectangle(car.boxX, car.boxY, 307.2, 128, 0x286935)
             .setOrigin(0.5)
-            .setTint(0x00ff00)
-            .setAlpha(0)
-            .setDropShadow(3, 3, 0x000000, 0.7)
-            .setDepth(5);
-          this.tweens.add({
-            targets: notifyText,
-            alpha: 1,
-            scale: 1.5,
-            duration: 300,
-            ease: 'Quad.easeOut',
-            onComplete: () => {
-              this.tweens.add({
-                targets: notifyText,
-                alpha: 0,
-                scale: 1,
-                duration: 500,
-                delay: 1000,
-                ease: 'Quad.easeIn',
-                onComplete: () => notifyText.destroy()
-              });
+            .setAlpha(0.7)
+            .setVisible(car.key === this.selectedCarKey);
+
+        //set locked cars
+        let lockedText = '';
+        if (!unlocked) {
+            if (playerData.level < car.level) {
+                lockedText = `LOCKED\nLEVEL ${car.level}\nREQUIRED`;
+            } else {
+                lockedText = `LOCKED\n$${car.cost}`;
             }
-          });
-          this.showDetail(car);  // Refresh view
+            car.costText = this.add.bitmapText(x, 90, 'pixelFont', lockedText, 20)
+                .setOrigin(0.5)
+                .setTint(0xff0000);
+            car.LockedBox = this.add.rectangle(car.boxX, car.boxY, 307.2, 128, 0x555555)
+                .setOrigin(0.5)
+                .setAlpha(0.7);
+        } else {
+            if (car.costText) car.costText.destroy();
+            box.clearTint();
+        }
+        // car sprite
+        const sprite = this.add.sprite(x, car.y, car.key, 0).setScale(car.scale).setInteractive();
+        sprite.on('pointerdown', () => {
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            this.showLargeCar(car);
+            this.showStart(car);
         });
 
-        const noButton = makeButton(-100, 40, 'title', 'No', 0xff5a5a, () => {
-          confirmWindow.destroy();  // Remove confirmation window
+        this.carContainer.add(car.colourBox);
+        
+        this.carContainer.add(sprite);
+        if (car.LockedBox) this.carContainer.add(car.LockedBox);
+        this.carContainer.add(box);
+        if (car.costText) this.carContainer.add(car.costText);
+    });
+
+    // Scrolling arrows
+    const leftArrow = this.add.image(50, 620, 'arrow').setInteractive().setScale(0.04).setFlipX(true);
+    const rightArrow = this.add.image(1030, 620, 'arrow').setInteractive().setScale(0.04);
+
+    leftArrow.on('pointerdown', () => {
+        this.carOffsetX += 200;
+        this.carContainer.x = Phaser.Math.Clamp(this.carOffsetX + 640, -500, 640);
+    });
+
+    rightArrow.on('pointerdown', () => {
+        this.carOffsetX -= 200;
+        this.carContainer.x = Phaser.Math.Clamp(this.carOffsetX + 640, -((this.cars.length - 2) * spacing), 640);
+    });
+
+    // Show initial selected car after loop
+    this.cars.forEach(car => {
+        if(car.key == this.registry.get('selectedCar')){
+            this.showLargeCar(car);
+            this.showStart(car);
+        }
+    });
+
+    // Menu button
+    const menuButton = this.add.image(1230, 50, 'menu').setInteractive().setScale(0.4);
+    menuButton.on('pointerover', () => menuButton.setTint(0x888888));
+    menuButton.on('pointerout', () => menuButton.clearTint());
+    menuButton.on('pointerdown', () => {
+        if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+        this.scene.start('MenuScene');
+    });
+
+  }
+
+  showLargeCar(car) {
+    let playerData = this.registry.get("playerData");
+    const unlocked = playerData.unlockedCars.find(c => c[0] === car.key);
+
+
+    // Destroy previous large car, buttons
+    if (this.largeCar) this.largeCar.destroy();
+    if (this.selectButton) this.selectButton.destroy();
+    if (this.selectBG) this.selectBG.destroy();
+    
+    this.checkMarkBox = this.add.image(1220, 500, 'box').setScale(0.2);
+    
+
+    //button position
+    let buttonX = 1010;
+    let buttonY = 500;
+    if (playerData.level < car.level){
+        buttonX = 990;
+    }
+
+    this.selectBG = this.add.image(buttonX, buttonY, 'select').setOrigin(0.5).setScale(0.6, 0.5);
+
+
+    // Large car preview
+    this.largeCar = this.add.sprite(640, 300, car.key, 0).setScale(car.scale +0.8);
+
+    // Select/unlock button
+    let buttonText = "SELECT";
+    let size = 32;
+    if (!unlocked){
+      buttonText = `BUY - $${car.cost}`;
+      size = 22;
+    }
+
+    //check if reaches level requirement
+    
+    if (playerData.level < car.level) {
+      this.selectBG.setScale(0.72, 0.5);
+      buttonText = `LEVEL ${car.level} REQUIRED`;
+      size = 22;
+    }
+
+    this.selectButton = this.add.bitmapText(buttonX, buttonY, 'pixelFont', buttonText, size)
+      .setOrigin(0.5)
+      .setInteractive()
+      .setTint(0xffffff);
+
+    this.selectButton.on('pointerover', () => this.selectButton.setTint(0x800b0b));
+    this.selectButton.on('pointerout', () => this.selectButton.setTint(0xffffff));
+
+    this.selectButton.on('pointerdown', () => {
+      if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+      if (!unlocked) {
+        //attempt to buy
+        if (playerData.currency >= car.cost){
+          if (playerData.level < car.level) {
+            //level too low
+            this.selectButton.setText(`LEVEL ${car.level} \nREQUIRED`);
+            this.selectButton.setFontSize(22);
+            this.selectButton.setPosition(900, 500);
+            return; // exit without buying
+          }
+          //buy car
+          playerData.currency -= car.cost;
+          playerData.unlockedCars.push([car.key, 1]); // add car with initial stage 1
+
+          //update money display
+          this.moneyText.setText(`$${playerData.currency}`);
+
+          //remove locked text and box
+          if (car.costText) car.costText.destroy();
+          if (car.LockedBox) car.LockedBox.destroy();
+          
+          //show selected box
+          car.colourBox.setVisible(true);
+
+          //change button to select
+          this.selectButton.setText("SELECT");
+          this.selectButton.setFontSize(32);
+
+          // Save updated player back to registry
+          this.registry.set("playerData", playerData);
+
+          //save to localStorage
+          savePlayerDataFromScene(this);
+
+          //reload large car to show upgrade options
+          this.showLargeCar(car);
+        } 
+        else {
+          //not enough money
+          this.selectButton.setText("NOT ENOUGH $");
+          this.selectButton.setFontSize(22);
+          return; // exit without selecting
+        }
+      }
+      this.registry.set('selectedCar', car.key);
+      this.showStart(car);
+    });
+
+    // === Upgrade System ===
+    const unlockedCar = playerData.unlockedCars.find(c => c[0] === car.key);
+    const currentStage = this.registry.get('upgrades')[car.key] || 1;
+    const maxStage = car.maxStage;
+
+    // remove any previous ui
+    if (this.stageInfoText) this.stageInfoText.destroy();
+    if (this.upgradeBtn) this.upgradeBtn.destroy();
+    if (this.upgradeLabel) this.upgradeLabel.destroy();
+    if (this.infoBox) this.infoBox.destroy();
+
+    //display grey text box behind check mark
+    const infoBox = this.add.image(190, 350, 'greySquare').setScale(0.4, 0.6);
+
+    //stage info text
+
+    this.stageInfoText = this.add.bitmapText(50, 230, 'pixelFont',
+      `CAR: \n${car.key.toUpperCase()}\nSTAGE: ${currentStage}/${maxStage}
+      \n0 - 100 Time: \n${[0, 7, 4, 2.5][currentStage]} Seconds`, 20)
+      .setOrigin(0, 0)
+      .setTint(0xffffff)
+      .setLineSpacing(30);
+
+    // Only show upgrade button if car is unlocked and not maxed
+    if (unlocked && currentStage < maxStage) {
+      const upgradeCost = currentStage * 150 + 150; // cost scaling
+      this.upgradeBtn = this.add.image(50, 450, 'btn_resume')
+        .setScale(0.5)
+        .setInteractive()
+        .setOrigin(0, 0.5);
+      this.upgradeLabel = this.add.bitmapText(60, 450, 'pixelFont',
+        `UPGRADE ($${upgradeCost})`, 17.5)
+        .setOrigin(0, 0.5);
+
+        // Hover effect
+        this.upgradeBtn.on('pointerover', () => this.upgradeBtn.setTint(0xdddd00));
+        this.upgradeBtn.on('pointerout', () => this.upgradeBtn.clearTint());
+
+        this.upgradeBtn.on('pointerdown', () => {
+          if (playerData.currency < upgradeCost) {
+            this.upgradeLabel.setText("NOT ENOUGH $");
+            this.upgradeLabel.setTint(0xff0000);
+            return;
+          }
+
+            // Confirmation window
+            const confirmBox = this.add.rectangle(640, 360, 700, 200, 0x000000, 0.8);
+            const confirmText = this.add.bitmapText(640, 320, 'pixelFont',
+                `Upgrade ${car.key.toUpperCase()} to Stage ${currentStage + 1}?`, 24)
+                .setOrigin(0.5);
+            const yesBtn = this.add.bitmapText(590, 380, 'pixelFont', 'YES', 22)
+                .setOrigin(0.5)
+                .setTint(0x00e676)
+                .setInteractive();
+            const noBtn = this.add.bitmapText(690, 380, 'pixelFont', 'NO', 22)
+                .setOrigin(0.5)
+                .setTint(0xff5a5a)
+                .setInteractive();
+
+            yesBtn.on('pointerdown', () => {
+                let upgrades = this.registry.get('upgrades');
+                // Deduct money and upgrade stage
+                playerData.currency -= upgradeCost;
+                upgrades[car.key] = currentStage + 1;
+                unlockedCar[1] = currentStage + 1;
+
+                // Update registry upgrades
+                this.registry.set('upgrades', upgrades);
+                this.registry.set('playerData', playerData);
+
+                // Save progress
+                this.registry.set("playerData", playerData);
+                savePlayerDataFromScene(this);
+
+                // Notification text
+                const notify = this.add.bitmapText(640, 360, 'pixelFont',
+                    `UPGRADED TO STAGE ${currentStage + 1}!`, 32)
+                    .setOrigin(0.5)
+                    .setTint(0x00ff00)
+                    .setAlpha(0)
+                    .setDepth(1);
+                this.tweens.add({
+                    targets: notify,
+                    alpha: 1,
+                    duration: 300,
+                    yoyo: true,
+                    hold: 800,
+                    onComplete: () => notify.destroy()
+                });
+
+                confirmBox.destroy();
+                confirmText.destroy();
+                yesBtn.destroy();
+                noBtn.destroy();
+                this.moneyText.setText(`$${playerData.currency}`);
+                this.showLargeCar(car); // refresh UI
+            });
+
+            noBtn.on('pointerdown', () => {
+                confirmBox.destroy();
+                confirmText.destroy();
+                yesBtn.destroy();
+                noBtn.destroy();
+            });
         });
-
-        confirmWindow.add([background, confirmText, yesButton, noButton]);
-        this.galleryItems.push(confirmWindow);  // Keep track of the confirmation window
-      });
-
-      this.activeItems.push(upgradeBtn);
-    } else {
-      const maxedText = this.add.bitmapText(W - 20, 50, 'pixelFont', 'Max Stage Reached', 20)
-        .setOrigin(1, 0)  // Align to top right
-        .setDropShadow(2, 2, 0x000000, 0.5)
-        .setTint(0xffd700);
-      this.activeItems.push(maxedText);
+    } else if (currentStage >= maxStage && unlockedCar) {
+        // Maxed out label
+        this.add.image(50, 450, 'btn_resume')
+        .setScale(0.5)
+        .setInteractive()
+        .setOrigin(0, 0.5);
+      this.add.bitmapText(60, 450, 'pixelFont',
+        `MAX LEVEL`, 17.5)
+        .setOrigin(-0.25, 0.5);
     }
+
+    }
+
+    showStart (car){
+        if (this.checkMark) this.checkMark.destroy();
+
+        if(car.key == this.registry.get('selectedCar')){
+
+            this.checkMark = this.add.image(1220, 500, 'check').setScale(0.3);
+
+            this.cars.forEach(c => c.colourBox.setVisible(false)); // hide all 
+            car.colourBox.setVisible(true); // show selected
+
+            // Add start button if not present
+            if (!this.startButton) {
+                this.startButton = this.add.image(1150, 610, 'btn_start').setInteractive().setScale(0.4);
+                this.startButton.on('pointerover', () => this.startButton.setTint(0x888888));
+                this.startButton.on('pointerout', () => this.startButton.clearTint());
+                this.startButton.on('pointerdown', () => {
+                    if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+                    this.scene.start('RaceScene');
+                });
+
+                this.add.bitmapText(1150, 670, 'pixelFont', 'START GAME', 20).setOrigin(0.5);
+            }
+        } 
+    }
+
   }
-
-  clearScene() {
-    // remove any previously added gallery/detail items
-    if (this.galleryItems) {
-      this.galleryItems.forEach(o => o.destroy());
-      this.galleryItems = null;
-    }
-    if (this.activeItems) {
-      this.activeItems.forEach(o => o.destroy());
-      this.activeItems = null;
-    }
-  }
-}

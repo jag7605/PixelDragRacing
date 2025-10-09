@@ -67,6 +67,11 @@ export default class LoginScene extends Phaser.Scene {
                     // Success → store active user in registry
                     this.registry.set("playerData", playerData);
                     this.registry.set("activeUser", username);
+                    const upgrades = {};
+                    for (const [carKey, stage] of playerData.unlockedCars) {
+                        upgrades[carKey] = stage; // stage from saved data
+                    }
+                    this.registry.set('upgrades', upgrades);
                     this.scene.start("MenuScene");
                 } else {
                     errorText.setText('Incorrect password. Please try again.');

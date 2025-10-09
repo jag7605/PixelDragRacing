@@ -19,25 +19,10 @@ export default class MenuScene extends Phaser.Scene {
             this.registry.set('musicMuted', false);
         }
 
-        // Get current player data
-        let playerData = this.registry.get("playerData");
-
-        if (!playerData) {
-            // Create temporary guest player
-            playerData = {
-                username: "Guest",
-                currency: 0,      // starting money for this session
-                unlockedCars: ["beater_car", "beater_jeep"], // default cars
-                stats: { races: 0, wins: 0, losses: 0, totalShifts: 0, shifts: 0 },
-                XP: 0,
-                level: 1,
-                totalCurrencyEarned: 0,
-                fastestTime: 0
-            };
-            this.registry.set("playerData", playerData);
-        }
-
         const { width: W, height: H } = this.scale;
+
+        //get player data
+        let playerData = this.registry.get("playerData");
 
          // Background
         this.add.image(W/2, H/2, 'sky').setDisplaySize(W, H);

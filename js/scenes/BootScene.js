@@ -7,8 +7,7 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
     this.load.image('finishLine', 'assets/backgrounds/Finish_Line.png');
     this.load.image('cloud', 'assets/backgrounds/pixel_cloud.png');
-    this.load.image('garage_bg', 'assets/backgrounds/garage_bg.jpg');       // clear
-    this.load.image('garage_bg_blur', 'assets/backgrounds/garage_bg_blur.jpg'); // blurred
+    this.load.image('garage_bg', 'assets/backgrounds/garage_bg.png');     
 
 
     // Logo
@@ -23,6 +22,9 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('title', 'assets/ui/title.png');
     this.load.bitmapFont('pixelFont', 'assets/ui/font/font.png', 'assets/ui/font/font.xml');
     this.load.image('moneyIcon', 'assets/ui/dollar.png');
+    this.load.image('greySquare', 'assets/ui/greySquare.png');
+    this.load.image('box', 'assets/ui/box.png');
+    this.load.image('check', 'assets/ui/check.png');
 
     //buttons
     this.load.image('btn_start', 'assets/ui/buttonImages/play2.png');
@@ -36,6 +38,8 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('btn_settings', 'assets/ui/buttonImages/settings.png');
     this.load.image('pauseButton', 'assets/ui/buttonImages/pause2.png');
     this.load.image('login', 'assets/ui/buttonImages/login.png');
+    this.load.image('arrow', 'assets/ui/buttonImages/arrow.png');
+    this.load.image('select', 'assets/ui/buttonImages/select.png');
 
     // Sounds
     this.load.audio('buttonSound', 'assets/sound/button_click.mp3');
@@ -71,6 +75,37 @@ export default class BootScene extends Phaser.Scene {
       });
     });
 
+    if (!this.registry.get('selectedCar')) {
+      this.registry.set('selectedCar', 'beater_jeep');
+    }
+
+    // Get current player data
+    let playerData = this.registry.get("playerData");
+
+        if (!playerData) {
+            // Create temporary guest player
+            playerData = {
+                username: "Guest",
+                currency: 0,      // starting money for this session
+                unlockedCars: [["beater_car", 1], ["beater_jeep", 1]], // default cars
+                stats: { races: 0, wins: 0, losses: 0, totalShifts: 0, shifts: 0 },
+                XP: 0,
+                level: 1,
+                totalCurrencyEarned: 0,
+                fastestTime: 0
+            };
+            this.registry.set("playerData", playerData);
+        }
+  
+    //set upgrade registry if not set based on unlocked cars
+    if (!this.registry.get('upgrades')) {
+        for (const [carKey, stage] of playerData.unlockedCars) {
+            const upgrades = this.registry.get('upgrades') || {};
+            upgrades[carKey] = stage;
+            this.registry.set('upgrades', upgrades);
+        }
+    }
+
     this.load.once('complete', () => {
       //full size growth when it is finshed 
       this.tweens.add({
@@ -82,7 +117,7 @@ export default class BootScene extends Phaser.Scene {
         onComplete: () => this.scene.start('DevSceneSwitch'), 
       });
     });
-
+      
     this.load.start();
   }
 }

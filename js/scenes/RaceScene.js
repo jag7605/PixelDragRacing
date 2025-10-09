@@ -69,13 +69,9 @@ export default class RaceScene extends Phaser.Scene {
 
     create() {
 
-        if (!this.registry.get('selectedCar')) {
-            this.registry.set('selectedCar', 'beater_jeep');
-        }
-
-        const selectedKey = this.registry.get('selectedCar') || 'beater_jeep';
-        const upgrades = this.registry.get('upgrades') || {};
-        const upgradeStage = upgrades[selectedKey] || 1;
+        const selectedKey = this.registry.get('selectedCar');
+        const upgrades = this.registry.get('upgrades');
+        const upgradeStage = this.registry.get('upgrades')[selectedKey];
 
         this.playerCar = new Car(this, 150, 410, upgradeStage);
         this.botCar = new Bot(this, 150, 310, 0.1);
