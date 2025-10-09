@@ -1,6 +1,7 @@
 import Car from '../gameplay/Car.js';
 import Bot from '../gameplay/Bot.js';
 import {savePlayerDataFromScene} from '../utils/playerData.js';
+import {resizeCar} from '../utils/resize.js';
 
 export default class RaceScene extends Phaser.Scene {
     constructor() {
@@ -73,17 +74,25 @@ export default class RaceScene extends Phaser.Scene {
         const upgrades = this.registry.get('upgrades');
         const upgradeStage = this.registry.get('upgrades')[selectedKey];
 
+        const groundY = 490; // Y coordinate of the road/ground
+        const desiredHeight = 120; // all cars will be this tall
+
         this.playerCar = new Car(this, 150, 410, upgradeStage);
         this.botCar = new Bot(this, 150, 310, 0.1);
+
+        this.playerCar.sprite.setOrigin(0.5);
+        this.botCar.sprite.setOrigin(0.5);
+
 
         // Helper: ensure an animation exists for a given spritesheet key
         const makeDriveAnim = (key, fps = 24) => {
             const animKey = `drive_${key}`;
             if (!this.anims.exists(animKey)) {
-                // If you’re unsure of exact frame count, 0..7 works for your current sheets.
+                const texture = this.textures.get(key);
+                const frameCount = texture ? texture.frameTotal : 1;
                 this.anims.create({
                     key: animKey,
-                    frames: this.anims.generateFrameNumbers(key, { start: 0, end: 7 }),
+                    frames: this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 }),
                     frameRate: fps,
                     repeat: -1
                 });
@@ -104,6 +113,9 @@ export default class RaceScene extends Phaser.Scene {
         this.botCar.sprite.setTexture('beater_jeep');
         this.botCar.sprite.play(botAnimKey);
 
+        resizeCar(this.playerCar.sprite, desiredHeight, groundY);
+        resizeCar(this.botCar.sprite, desiredHeight, groundY - 100);
+
         this.resetRace();   // safe now, because cars exist
 
         // === Track length (in px) ===
@@ -111,10 +123,10 @@ export default class RaceScene extends Phaser.Scene {
 
         // === Backgrounds ===
         this.sky = this.add.tileSprite(0, 0, this.trackLength, 720, 'sky').setOrigin(0, 0);
-        this.road = this.add.tileSprite(0, 325, this.trackLength, 256, 'road').setOrigin(0, 0);
+        this.road = this.add.tileSprite(0, 280, this.trackLength, 256, 'road').setOrigin(0, 0);
 
         this.finishLineX = this.trackLength - 200;
-        this.finishLine = this.add.image(this.finishLineX, 325, 'finishLine')
+        this.finishLine = this.add.image(this.finishLineX, 280, 'finishLine')
             .setOrigin(0, 0)
             .setVisible(false);
 
@@ -191,6 +203,7 @@ export default class RaceScene extends Phaser.Scene {
         graphics.closePath();
         graphics.fillPath();
         graphics.setScrollFactor(0);
+        graphics.setDepth(3.5);
 
         // add the word "GEAR" above the gear indicator
         this.GEAR = this.add.text(405, 670, 'GEAR', {
@@ -376,7 +389,7 @@ export default class RaceScene extends Phaser.Scene {
         this.road.setDepth(0);
         this.finishLine.setDepth(1);
         this.botCar.sprite.setDepth(2);
-        this.playerCar.sprite.setDepth(2);
+        this.playerCar.sprite.setDepth(3);
         this.rpmDial.setDepth(3);
         this.mphDial.setDepth(3);
         this.speedText.setDepth(3);

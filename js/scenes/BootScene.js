@@ -14,9 +14,21 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('gameLogo', 'assets/ui//gamelogo/PDRlogo.png');
 
     // Cars
-    this.load.spritesheet('beater_car', 'assets/cars/beater_car_ride.png', { frameWidth: 192, frameHeight: 192 });
-    this.load.spritesheet('beater_jeep', 'assets/cars/beater_jeep_ride.png', { frameWidth: 256, frameHeight: 256 });
-
+    this.load.spritesheet('beater_car', 'assets/cars/beater_car_ride.png', { frameWidth: 192, frameHeight: 66 });
+    this.load.spritesheet('beater_jeep', 'assets/cars/beater_jeep_ride.png', { frameWidth: 256, frameHeight: 86 });
+    // ferrari
+    this.load.spritesheet('ferrari_gw', 'assets/cars/ferrari_gw.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('ferrari_rw', 'assets/cars/ferrari_rw.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('ferrari_ww', 'assets/cars/ferrari_ww.png', { frameWidth: 112, frameHeight: 64 });
+    //porsche
+    this.load.spritesheet('porsche_yw', 'assets/cars/porsche_911_yw.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('porsche_rw', 'assets/cars/porsche_911_rw.png', { frameWidth: 112, frameHeight: 64 });
+    //nissan
+    this.load.spritesheet('nissan_gw', 'assets/cars/nissanGTR_gw.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('nissan_yw', 'assets/cars/nissanGTR_yw.png', { frameWidth: 112, frameHeight: 64 });
+    //troll
+    this.load.spritesheet('troll', 'assets/cars/troll.png', { frameWidth: 256, frameHeight: 200 });
+    
     // UI
     this.load.image('yellowSquare', 'assets/ui/yellowSquare.png');
     this.load.image('title', 'assets/ui/title.png');

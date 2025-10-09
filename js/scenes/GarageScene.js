@@ -15,8 +15,12 @@ export default class GarageScene extends Phaser.Scene {
 
     // Car definitions
     this.cars = [
-        { key: 'beater_car', scale: 1.6, y: -20, cost: 0, level: 1, stage: 1, maxStage: 3 },
-        { key: 'beater_jeep', scale: 1, y: 0, cost: 0, level: 1, stage: 1, maxStage: 3 },
+        { key: 'beater_car', scale: 1.6, y: 80, cost: 0, level: 1, stage: 1, maxStage: 3 },
+        { key: 'beater_jeep', scale: 1, y: 80, cost: 0, level: 1, stage: 1, maxStage: 3 },
+        { key: 'ferrari_gw', scale: 1.8, y: 80, cost: 500, level: 1, stage: 1, maxStage: 3},
+        { key: 'porsche_yw', scale: 1.8, y: 80, cost: 700, level: 2, stage: 1, maxStage: 3},
+        { key: 'nissan_gw', scale: 1.6, y: 80, cost: 800, level: 3, stage: 1, maxStage: 3},
+        { key: 'troll', scale: 0.7, y: 70, cost: 1000, level: 5, stage: 1, maxStage: 3},
     ];
 
     this.largeCar = null;
@@ -149,9 +153,11 @@ export default class GarageScene extends Phaser.Scene {
 
     this.selectBG = this.add.image(buttonX, buttonY, 'select').setOrigin(0.5).setScale(0.6, 0.5);
 
-
+    const fixedBottomY = 550;
     // Large car preview
     this.largeCar = this.add.sprite(640, 300, car.key, 0).setScale(car.scale +0.8);
+    this.largeCar.setOrigin(0.5, 1); 
+    this.largeCar.y = fixedBottomY;
 
     // Select/unlock button
     let buttonText = "SELECT";
