@@ -75,7 +75,7 @@ export default class MenuScene extends Phaser.Scene {
             playerData = {
                 username: "Guest",
                 currency: 0,      // starting money for this session
-                unlockedCars: [["car1", 1], ["car2", 1]], // default cars
+                unlockedCars: [["beater_car", 1], ["beater_jeep", 1]], // default cars
                 stats: { races: 0, wins: 0, losses: 0, totalShifts: 0, shifts: 0 },
                 XP: 0,
                 level: 1,
