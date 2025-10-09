@@ -1,5 +1,6 @@
 import Car from '../gameplay/Car.js';
 import Bot from '../gameplay/Bot.js';
+import {savePlayerDataFromScene} from '../utils/playerData.js';
 
 export default class RaceScene extends Phaser.Scene {
     constructor() {
@@ -493,13 +494,20 @@ export default class RaceScene extends Phaser.Scene {
     raceOver() {
         if (this.raceEnded) return;
         this.raceEnded = true;
+        let playerData = this.registry.get("playerData");
 
-        //check who won
+        //check who won and calculate stats/money
+        let currencyEarned = 0;
         if (this.botCar.finishTime !== 'DNF' && this.playerCar.finishTime !== 'DNF') {
             if (this.playerCar.finishTime < this.botCar.finishTime) {
                 this.registry.set('youWin', true);
+                currencyEarned = 100;
+                playerData.stats.wins += 1;
+
             } else {
                 this.registry.set('youWin', false);
+                currencyEarned = 20;
+                playerData.stats.losses += 1;
             }
         }
         else if (this.playerCar.finishTime === 'DNF') {
@@ -519,6 +527,27 @@ export default class RaceScene extends Phaser.Scene {
         this.registry.set('shiftCount', this.playerCar.getShiftCount());
         this.registry.set('perfectShiftPercent', this.playerCar.getPerfectShiftPercentage());
 
+        //update player data in registry
+
+        //perfect shift bonus
+        if (this.playerCar.getPerfectShiftPercentage() === 100 && this.playerCar.getShiftCount() > 0) {
+            currencyEarned += 50; // bonus for perfect shifts
+        }
+
+        playerData.currency += currencyEarned;
+        playerData.totalCurrencyEarned += currencyEarned;
+
+        //check for fastest time
+        if (this.playerCar.finishTime && (!playerData.fastestTime || this.playerCar.finishTime < playerData.fastestTime)) {
+            playerData.fastestTime = this.playerCar.finishTime;
+        }
+
+        // Save updated player back to registry
+        this.registry.set("playerData", playerData);
+
+        //save to localStorage
+        savePlayerDataFromScene(this);
+        
         this.time.delayedCall(500, () => {
             this.scene.start("EndScene");
         });
