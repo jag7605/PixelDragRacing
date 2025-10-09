@@ -8,6 +8,8 @@ import RaceScene from './js/scenes/RaceScene.js';
 import InfoScene from './js/scenes/InfoScene.js';
 import SettingsScene from './js/scenes/SettingsScene.js';
 import GarageScene from './js/scenes/GarageScene.js';
+import LoginScene from './js/scenes/LoginScene.js';
+import SignUpScene from './js/scenes/SignUpScene.js';
 
 
 // Phaser game configuration (preserving your prototype settings)
@@ -32,8 +34,13 @@ const config = {
         RaceScene,
         InfoScene,
         SettingsScene,
-        GarageScene
-    ]
+        GarageScene,
+        LoginScene,
+        SignUpScene
+    ],
+    dom: {
+        createContainer: true  // enables DOM elements for login/signup
+    }
 };
 
 // Create a new Phaser game instance

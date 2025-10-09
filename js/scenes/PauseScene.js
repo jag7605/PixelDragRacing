@@ -17,14 +17,6 @@ export default class PauseScene extends Phaser.Scene {
         this.add.bitmapText(645, 155, 'pixelFont', 'PAUSED', 40).setOrigin(0.5);
 
         const raceScene = this.scene.get('RaceScene');
-
-        if (this.registry.get('sfxMuted') === undefined) {
-            this.registry.set('sfxMuted', false);
-        }
-
-        if (this.registry.get('musicMuted') === undefined) {
-            this.registry.set('musicMuted', false);
-        }
         
         //resume button
         const resumeButton = this.createButton(640, 440, 'btn_resume', 0.6, () => {

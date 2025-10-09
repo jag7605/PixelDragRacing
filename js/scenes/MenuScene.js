@@ -6,6 +6,21 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
+        //set registry
+        if (this.registry.get('selectedCar') === undefined) {
+            this.registry.set('selectedCar', 'car1');
+        }
+
+        if (this.registry.get('sfxMuted') === undefined) {
+            this.registry.set('sfxMuted', false);
+        }
+
+        if (this.registry.get('musicMuted') === undefined) {
+            this.registry.set('musicMuted', false);
+        }
+
+        // Get current player data
+        let playerData = this.registry.get("playerData");
 
         const { width: W, height: H } = this.scale;
 
@@ -48,6 +63,27 @@ export default class MenuScene extends Phaser.Scene {
             this.scene.launch('InfoScene');
         });
 
+        //login button
+        ui.createButton(W - 110, 40, 'login', null, 0.37, 0.4, () => {
+            this.scene.pause();
+            this.scene.launch('LoginScene');
+        });
+
+        // set money amount in top left
+        if (!playerData) {
+            // Create temporary guest player
+            playerData = {
+                username: "Guest",
+                currency: 0,      // starting money for this session
+                unlockedCars: [["car1", 1], ["car2", 1]], // default cars
+                stats: { races: 0, wins: 0, losses: 0, totalShifts: 0, shifts: 0 },
+                XP: 0,
+                level: 1,
+                totalCurrencyEarned: 0,
+                fastestTime: 0
+            };
+            this.registry.set("playerData", playerData);
+        }
   }
 
         
