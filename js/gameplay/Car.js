@@ -1,5 +1,6 @@
-// Import gear system for managing car gears
+// Import gear system for managing car gears and nitrous mini-game for boost activation
 import GearSystem from './GearSystem.js';
+import NitrousMiniGame from './NitrousMiniGame.js';
 
 // This class represents a car in the game, handling its movement and gear system
 export default class Car {
@@ -147,11 +148,19 @@ export default class Car {
         }
 
         // Handle nitrous activation
-        if (Phaser.Input.Keyboard.JustDown(nitrousKey) && !this.nitrousActive && this.nitrousCooldown <= 0) { // if the nitrous key is pressed, it isn't already active, and the cooldown is over,
-            this.nitrousActive = true; // flip the nitrous active flag to true
-            this.nitrousCooldown = this.nitrousDuration + 5000; // Set cooldown to 5 seconds after using nitrous
-            this.scene.time.delayedCall(this.nitrousDuration, () => { // after the nitrous duration ends,
-                this.nitrousActive = false; // set nitrous active flag to false to disable the speed boost.
+        // In update(), replace the nitrous activation block
+        if (Phaser.Input.Keyboard.JustDown(nitrousKey) && !this.nitrousActive && this.nitrousCooldown <= 0) {
+            // Start mini-game instead of direct activation
+            const miniGame = new NitrousMiniGame(this.scene, (isSuccess) => {
+                if (isSuccess) {
+                    this.nitrousActive = true;
+                    this.nitrousCooldown = this.nitrousDuration + 5000;  // Existing cooldown
+                    this.scene.time.delayedCall(this.nitrousDuration, () => {
+                        this.nitrousActive = false;
+                    });
+                } else {
+                    this.nitrousCooldown = 5000;  // Reset cooldown upon failing the minigame
+                }
             });
         }
 

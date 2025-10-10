@@ -83,6 +83,8 @@ export default class RaceScene extends Phaser.Scene {
         this.playerCar.sprite.setOrigin(0.5);
         this.botCar.sprite.setOrigin(0.5);
 
+        this.isPaused = false; // track if game is paused
+
 
         // Helper: ensure an animation exists for a given spritesheet key
         const makeDriveAnim = (key, fps = 24) => {
@@ -409,6 +411,8 @@ export default class RaceScene extends Phaser.Scene {
     update(time, delta) {
         if (!this.raceStarted) return;
 
+        if (this.isPaused) return; // skip update if paused
+        
         // === Update car positions based on distance ===
         this.playerCar.sprite.x = 150 + this.playerCar.distance;
         this.botCar.sprite.x = 150 + this.botCar.distance;
