@@ -68,8 +68,10 @@ export default class LoginScene extends Phaser.Scene {
                     this.registry.set("playerData", playerData);
                     this.registry.set("activeUser", username);
                     const upgrades = {};
-                    for (const [carKey, stage] of playerData.unlockedCars) {
-                        upgrades[carKey] = stage; // stage from saved data
+                    for (const carKey in playerData.unlockedCars) {
+                        if (playerData.unlockedCars.hasOwnProperty(carKey)) {
+                            upgrades[carKey] = playerData.unlockedCars[carKey];
+                        }
                     }
                     this.registry.set('upgrades', upgrades);
                     this.scene.start("MenuScene");

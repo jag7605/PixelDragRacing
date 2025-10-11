@@ -16,20 +16,38 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('gameLogo', 'assets/ui//gamelogo/PDRlogo.png');
 
     // Cars
-    this.load.spritesheet('beater_car', 'assets/cars/beater_car_ride.png', { frameWidth: 192, frameHeight: 66 });
     this.load.spritesheet('beater_jeep', 'assets/cars/beater_jeep_ride.png', { frameWidth: 256, frameHeight: 86 });
-    // ferrari
-    this.load.spritesheet('ferrari_gw', 'assets/cars/ferrari_gw.png', { frameWidth: 112, frameHeight: 64 });
-    this.load.spritesheet('ferrari_rw', 'assets/cars/ferrari_rw.png', { frameWidth: 112, frameHeight: 64 });
-    this.load.spritesheet('ferrari_ww', 'assets/cars/ferrari_ww.png', { frameWidth: 112, frameHeight: 64 });
-    //porsche
-    this.load.spritesheet('porsche_yw', 'assets/cars/porsche_911_yw.png', { frameWidth: 112, frameHeight: 64 });
-    this.load.spritesheet('porsche_rw', 'assets/cars/porsche_911_rw.png', { frameWidth: 112, frameHeight: 64 });
-    //nissan
-    this.load.spritesheet('nissan_gw', 'assets/cars/nissanGTR_gw.png', { frameWidth: 112, frameHeight: 64 });
-    this.load.spritesheet('nissan_yw', 'assets/cars/nissanGTR_yw.png', { frameWidth: 112, frameHeight: 64 });
-    //troll
-    this.load.spritesheet('troll', 'assets/cars/troll.png', { frameWidth: 256, frameHeight: 200 });
+
+    //body gt40
+    this.load.spritesheet('gt40_black', 'assets/cars/car_body/gt40_black.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('gt40_blue', 'assets/cars/car_body/gt40_blue.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('gt40', 'assets/cars/car_body/gt40.png', { frameWidth: 112, frameHeight: 64 });
+
+    //porsche body
+    this.load.spritesheet('porsche_red_white', 'assets/cars/car_body/porsche_red_white.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('porsche_white', 'assets/cars/car_body/porsche_white.png', { frameWidth: 112, frameHeight: 64 });
+
+    //ferrari body
+    this.load.spritesheet('ferrari_white', 'assets/cars/car_body/ferrari_white.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('ferrari_red', 'assets/cars/car_body/ferrari_red.png', { frameWidth: 112, frameHeight: 64 });
+
+    //nissan body
+    this.load.spritesheet('nissan_blue', 'assets/cars/car_body/nissan_blue.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('nissan_white', 'assets/cars/car_body/nissan_white.png', { frameWidth: 112, frameHeight: 64 });
+
+    //wheels
+    this.load.spritesheet('wheels', 'assets/cars/car_wheel/wheels.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('wheel1', 'assets/cars/car_wheel/wheel1.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('wheel2', 'assets/cars/car_wheel/wheel2.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('wheel3', 'assets/cars/car_wheel/wheel3.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('wheel4', 'assets/cars/car_wheel/wheel4.png', { frameWidth: 112, frameHeight: 64 });
+
+    //wheel images
+    this.load.image('wheels_display', 'assets/cars/car_wheel/spr_wheel_type1.png');
+    this.load.image('wheel1_display', 'assets/cars/car_wheel/spr_wheel_type2.png');
+    this.load.image('wheel2_display', 'assets/cars/car_wheel/spr_wheel_type3.png');
+    this.load.image('wheel3_display', 'assets/cars/car_wheel/spr_wheel_type4.png');
+    this.load.image('wheel4_display', 'assets/cars/car_wheel/spr_wheel_type5.png');
     
     // UI
     this.load.image('yellowSquare', 'assets/ui/yellowSquare.png');
@@ -93,8 +111,27 @@ export default class BootScene extends Phaser.Scene {
     });
 
     if (!this.registry.get('selectedCar')) {
-      this.registry.set('selectedCar', 'beater_jeep');
+      this.registry.set('selectedCar', 'ferrari');
     }
+
+    if (!this.registry.get('wheelScale')) {
+      this.registry.set('wheelScale', 0.73);
+    }
+
+    if (!this.registry.get('selectedWheel')) {
+      this.registry.set('selectedWheel', 'wheels');
+    }
+
+    if (this.registry.get('selectedBody') === undefined) {
+            this.registry.set('selectedBody', 'ferrari_white');
+        }
+
+    this.registry.set('selectedCarData', {
+        body: 'ferrari_white',
+        wheels: 'wheels',
+        type: 'ferrari',
+        stage: 1
+    });
 
     // Get current player data
     let playerData = this.registry.get("playerData");
@@ -104,7 +141,7 @@ export default class BootScene extends Phaser.Scene {
             playerData = {
                 username: "Guest",
                 currency: 0,      // starting money for this session
-                unlockedCars: [["beater_car", 1], ["beater_jeep", 1]], // default cars
+                unlockedCars: { ferrari: 1 }, // default cars
                 stats: { races: 0, wins: 0, losses: 0, totalShifts: 0, shifts: 0 },
                 XP: 0,
                 level: 1,
@@ -116,12 +153,15 @@ export default class BootScene extends Phaser.Scene {
   
     //set upgrade registry if not set based on unlocked cars
     if (!this.registry.get('upgrades')) {
-        for (const [carKey, stage] of playerData.unlockedCars) {
-            const upgrades = this.registry.get('upgrades') || {};
-            upgrades[carKey] = stage;
-            this.registry.set('upgrades', upgrades);
-        }
-    }
+      const upgrades = {};
+      for (const carKey in playerData.unlockedCars) {
+          if (playerData.unlockedCars.hasOwnProperty(carKey)) {
+              upgrades[carKey] = playerData.unlockedCars[carKey];
+          }
+      }
+      this.registry.set('upgrades', upgrades);
+  }
+
 
     this.load.once('complete', () => {
       //full size growth when it is finshed 

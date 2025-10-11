@@ -70,21 +70,17 @@ export default class RaceScene extends Phaser.Scene {
 
     create() {
 
-        const selectedKey = this.registry.get('selectedCar');
+        const carData = this.registry.get('selectedCarData') || { body: 'gt40', wheels: 'wheels', wheelScale: 1};
         const upgrades = this.registry.get('upgrades');
-        const upgradeStage = this.registry.get('upgrades')[selectedKey];
+        const upgradeStage = upgrades[carData.type];
 
         const groundY = 490; // Y coordinate of the road/ground
         const desiredHeight = 120; // all cars will be this tall
 
+
         this.playerCar = new Car(this, 150, 410, upgradeStage);
+        this.playerCar.create();
         this.botCar = new Bot(this, 150, 310, 0.1);
-
-        this.playerCar.sprite.setOrigin(0.5);
-        this.botCar.sprite.setOrigin(0.5);
-
-        this.isPaused = false; // track if game is paused
-
 
         // Helper: ensure an animation exists for a given spritesheet key
         const makeDriveAnim = (key, fps = 24) => {
@@ -92,31 +88,43 @@ export default class RaceScene extends Phaser.Scene {
             if (!this.anims.exists(animKey)) {
                 const texture = this.textures.get(key);
                 const frameCount = texture ? texture.frameTotal : 1;
+                let frames = this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 });
+                frames = frames.reverse();
                 this.anims.create({
                     key: animKey,
-                    frames: this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 }),
+                    frames: frames,
                     frameRate: fps,
                     repeat: -1
                 });
             }
             return animKey;
         };
-
-
-
         // Build animations we need
-        const playerAnimKey = makeDriveAnim(selectedKey);
+
+        const bodyAnimKey = makeDriveAnim(carData.body);
+        if (bodyAnimKey) this.playerCar.bodySprite.play(bodyAnimKey);
+
+        const wheelAnimKey = makeDriveAnim(carData.wheels);
+        if (wheelAnimKey) this.playerCar.wheelSprite.play(wheelAnimKey);
+
         const botAnimKey = makeDriveAnim('beater_jeep');
+        if (botAnimKey) this.botCar.sprite.play(botAnimKey);
 
         // Swap textures on already-created sprites from Car/Bot (no Car.js changes)
-        this.playerCar.sprite.setTexture(selectedKey);
-        this.playerCar.sprite.play(playerAnimKey);
+
+
+        this.playerCar.bodySprite.setTexture(carData.body);
+        this.playerCar.bodySprite.play(bodyAnimKey);
+
+        this.playerCar.wheelSprite.setTexture(carData.wheels);
+        this.playerCar.wheelSprite.play(wheelAnimKey);
 
         this.botCar.sprite.setTexture('beater_jeep');
         this.botCar.sprite.play(botAnimKey);
 
-        resizeCar(this.playerCar.sprite, desiredHeight, groundY);
-        resizeCar(this.botCar.sprite, desiredHeight, groundY - 100);
+        resizeCar(this.playerCar.bodySprite, desiredHeight, groundY, 0);
+        resizeCar(this.playerCar.wheelSprite, desiredHeight, groundY, this.registry.get('wheelScale'));
+        resizeCar(this.botCar.sprite, desiredHeight, groundY - 100, 0);
 
         this.resetRace();   // safe now, because cars exist
 
@@ -183,7 +191,7 @@ export default class RaceScene extends Phaser.Scene {
         });
 
         // === Camera follow ===
-        this.cameras.main.startFollow(this.playerCar.sprite, true, 0.08, 0.08);
+        this.cameras.main.startFollow(this.playerCar.bodySprite, true, 0.08, 0.08);
         this.cameras.main.setBounds(0, 0, this.trackLength, 720);
 
         // === Gauges, needles, HUD graphics ===
@@ -397,7 +405,8 @@ export default class RaceScene extends Phaser.Scene {
         this.road.setDepth(0);
         this.finishLine.setDepth(1);
         this.botCar.sprite.setDepth(2);
-        this.playerCar.sprite.setDepth(3);
+        this.playerCar.bodySprite.setDepth(2);
+        this.playerCar.wheelSprite.setDepth(2);
         this.rpmDial.setDepth(3);
         this.mphDial.setDepth(3);
         this.speedText.setDepth(3);
@@ -420,7 +429,8 @@ export default class RaceScene extends Phaser.Scene {
         if (this.isPaused) return; // skip update if paused
 
         // === Update car positions based on distance ===
-        this.playerCar.sprite.x = 150 + this.playerCar.distance;
+        this.playerCar.bodySprite.x = 150 + this.playerCar.distance;
+        this.playerCar.wheelSprite.x = 150 + this.playerCar.distance;
         this.botCar.sprite.x = 150 + this.botCar.distance;
 
         // Show and scroll finish line when player is near
@@ -478,11 +488,15 @@ export default class RaceScene extends Phaser.Scene {
 
         // === Finish line check ===
         //player crosses finish line
-        // Check if player touches finish line
-        if (!this.playerCar.finishTime && this.playerCar.sprite.x + this.playerCar.sprite.width >= this.finishLine.x) {
-            this.playerCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
+        const playerRightEdge =
+        this.playerCar.bodySprite.x + (this.playerCar.bodySprite.displayWidth * (1 - this.playerCar.bodySprite.originX));
 
-            // Start bot DNF timer if bot hasn't finished
+        const botRightEdge =
+        this.botCar.sprite.x + (this.botCar.sprite.displayWidth * (1 - this.botCar.sprite.originX));
+
+        // Player crosses finish
+        if (!this.playerCar.finishTime && playerRightEdge >= this.finishLine.x) {
+            this.playerCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
             if (!this.botCar.finishTime) {
                 this.dnfCountdown();
                 this.dnfTimer = this.time.delayedCall(7000, () => {
@@ -491,11 +505,9 @@ export default class RaceScene extends Phaser.Scene {
             }
         }
 
-        // Check if bot touches finish line
-        if (!this.botCar.finishTime && this.botCar.sprite.x + this.botCar.sprite.width >= this.finishLine.x) {
+        // Bot crosses finish
+        if (!this.botCar.finishTime && botRightEdge >= this.finishLine.x) {
             this.botCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
-
-            // Start player DNF timer if player hasn't finished
             if (!this.playerCar.finishTime) {
                 this.dnfCountdown();
                 this.dnfTimer = this.time.delayedCall(7000, () => {
@@ -583,7 +595,8 @@ export default class RaceScene extends Phaser.Scene {
 
         this.playerCar.distance = 0;
         this.botCar.distance = 0;
-        this.playerCar.sprite.x = 150;
+        this.playerCar.bodySprite.x = 150;
+        this.playerCar.wheelSprite.x = 150;
         this.botCar.sprite.x = 150;
 
         this.registry.set('finalTime', 0);

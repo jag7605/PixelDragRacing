@@ -23,12 +23,26 @@ export default class GarageScene extends Phaser.Scene {
       { key: 'troll', scale: 0.7, y: 70, cost: 1000, level: 5, stage: 1, maxStage: 3 },
     ];
 
+    this.wheels = [
+      { key: 'wheels', scale: 1.6, y: 80, cost: 0, level: 1 },
+      { key: 'wheel1', scale: 1.6, y: 80, cost: 0, level: 1 },
+      { key: 'wheel2', scale: 1.6, y: 80, cost: 0, level: 1 },
+      { key: 'wheel3', scale: 1.6, y: 80, cost: 0, level: 1 },
+      { key: 'wheel4', scale: 1.6, y: 80, cost: 0, level: 1 },
+    ]
+
     this.largeCar = null;
     this.selectButton = null;
     this.startButton = null;
     this.checkMark = null;
     this.checkMarkBox = null;
     this.selectBG = null;
+    this.bodyChoice = this.registry.get('selectedBody');
+    this.wheelChoice = this.registry.get('selectedWheels');
+    this.CarChoice = this.registry.get('selectedCar');
+    this.wheelScale = 1
+    this.wheelX = 0;
+    this.wheelY = 0;
 
     //display money
 
@@ -48,6 +62,7 @@ export default class GarageScene extends Phaser.Scene {
 
     const spacing = 300; // distance between cars
     this.unlockedCars = this.registry.get("playerData").unlockedCars;
+
     this.cars.forEach((car, index) => {
       const x = index * spacing;
       const unlocked = playerData.unlockedCars.find(c => c[0] === car.key);
@@ -98,6 +113,7 @@ export default class GarageScene extends Phaser.Scene {
       if (car.costText) this.carContainer.add(car.costText);
     });
 
+
     // Scrolling arrows
     const leftArrow = this.add.image(50, 620, 'arrow').setInteractive().setScale(0.04).setFlipX(true);
     const rightArrow = this.add.image(1030, 620, 'arrow').setInteractive().setScale(0.04);
@@ -133,11 +149,12 @@ export default class GarageScene extends Phaser.Scene {
 
   showLargeCar(car) {
     let playerData = this.registry.get("playerData");
-    const unlocked = playerData.unlockedCars.find(c => c[0] === car.key);
+    const unlockedStage = playerData.unlockedCars[car.key] || 0; // 0 = locked
+    let wheel = this.wheelChoice;
 
-
-    // Destroy previous large car, buttons
+    // Destroy previous large car and UI
     if (this.largeCar) this.largeCar.destroy();
+    if (this.largeCarWheels) this.largeCarWheels.destroy();
     if (this.selectButton) this.selectButton.destroy();
     if (this.selectBG) this.selectBG.destroy();
 
@@ -153,6 +170,8 @@ export default class GarageScene extends Phaser.Scene {
 
     this.selectBG = this.add.image(buttonX, buttonY, 'select').setOrigin(0.5).setScale(0.6, 0.5);
 
+    // Large car
+    const bodyKey = car.selectedBody || (car.bodies && car.bodies.length > 0 ? car.bodies[0].key : car.key);
     const fixedBottomY = 550;
     // Large car preview
     this.largeCar = this.add.sprite(640, 300, car.key, 0).setScale(car.scale + 0.8);
@@ -165,6 +184,13 @@ export default class GarageScene extends Phaser.Scene {
     if (!unlocked) {
       buttonText = `BUY - $${car.cost}`;
       size = 22;
+      if (playerData.level < car.level) {
+        buttonText = `LEVEL ${car.level} REQUIRED`;
+        size = 22;
+        buttonX = 990;
+        buttonScale = 0.72;
+
+      }
     }
 
     //check if reaches level requirement
@@ -177,8 +203,7 @@ export default class GarageScene extends Phaser.Scene {
 
     this.selectButton = this.add.bitmapText(buttonX, buttonY, 'pixelFont', buttonText, size)
       .setOrigin(0.5)
-      .setInteractive()
-      .setTint(0xffffff);
+      .setInteractive();
 
     this.selectButton.on('pointerover', () => this.selectButton.setTint(0x800b0b));
     this.selectButton.on('pointerout', () => this.selectButton.setTint(0xffffff));
@@ -197,75 +222,59 @@ export default class GarageScene extends Phaser.Scene {
           }
           //buy car
           playerData.currency -= car.cost;
-          playerData.unlockedCars.push([car.key, 1]); // add car with initial stage 1
-
-          //update money display
+          playerData.unlockedCars[car.key] = 1;
           this.moneyText.setText(`$${playerData.currency}`);
-
-          //remove locked text and box
           if (car.costText) car.costText.destroy();
           if (car.LockedBox) car.LockedBox.destroy();
 
           //show selected box
           car.colourBox.setVisible(true);
-
-          //change button to select
           this.selectButton.setText("SELECT");
           this.selectButton.setFontSize(32);
-
-          // Save updated player back to registry
           this.registry.set("playerData", playerData);
-
-          //save to localStorage
           savePlayerDataFromScene(this);
-
-          //reload large car to show upgrade options
           this.showLargeCar(car);
         }
         else {
           //not enough money
           this.selectButton.setText("NOT ENOUGH $");
           this.selectButton.setFontSize(22);
-          return; // exit without selecting
+          return;
         }
       }
-      this.registry.set('selectedCar', car.key);
+
+      // Select car
+
+      this.CarChoice = car.key;
+      this.bodyChoice = this.bodyChoice || car.bodies[0].key;
+      if (!car.bodies.some(body => body.key === this.bodyChoice)) {
+        car.selectedBody = car.bodies[0].key; // fallback to first body
+      }
+      this.bodyChoice = car.selectedBody || car.bodies[0].key;
+      this.wheelChoice = car.selectedWheels;
+      this.registry.set('wheelScale', (car.wheelScale - 0.2));
+      this.registry.set('selectedCarData', {
+        body: this.bodyChoice,
+        wheels: this.wheelChoice || 'wheels',
+        type: this.CarChoice,
+        stage: playerData.unlockedCars[this.CarChoice] || 1
+      });
       this.showStart(car);
     });
 
-    // === Upgrade System ===
-    const unlockedCar = playerData.unlockedCars.find(c => c[0] === car.key);
-    const currentStage = this.registry.get('upgrades')[car.key] || 1;
-    const maxStage = car.maxStage;
-
-    // remove any previous ui
-    if (this.stageInfoText) this.stageInfoText.destroy();
-    if (this.upgradeBtn) this.upgradeBtn.destroy();
-    if (this.upgradeLabel) this.upgradeLabel.destroy();
-    if (this.infoBox) this.infoBox.destroy();
-
-    //display grey text box behind check mark
-    const infoBox = this.add.image(190, 350, 'greySquare').setScale(0.4, 0.6);
-
-    //stage info text
-
+    // Stage info text
+    const currentStage = playerData.unlockedCars[car.key] || 0;
     this.stageInfoText = this.add.bitmapText(50, 230, 'pixelFont',
-      `CAR: \n${car.key.toUpperCase()}\nSTAGE: ${currentStage}/${maxStage}
-      \n0 - 100 Time: \n${[0, 7, 4, 2.5][currentStage]} Seconds`, 20)
+      `CAR: \n${car.key.toUpperCase()}\nSTAGE: ${currentStage}/${car.maxStage} \n0 - 100 Time: \n${[0, 7, 4, 2.5][currentStage] || 0} Seconds`, 20)
       .setOrigin(0, 0)
       .setTint(0xffffff)
       .setLineSpacing(30);
 
-    // Only show upgrade button if car is unlocked and not maxed
-    if (unlocked && currentStage < maxStage) {
-      const upgradeCost = currentStage * 150 + 150; // cost scaling
-      this.upgradeBtn = this.add.image(50, 450, 'btn_resume')
-        .setScale(0.5)
-        .setInteractive()
-        .setOrigin(0, 0.5);
-      this.upgradeLabel = this.add.bitmapText(60, 450, 'pixelFont',
-        `UPGRADE ($${upgradeCost})`, 17.5)
-        .setOrigin(0, 0.5);
+    // Upgrade button if unlocked and not max stage
+    if (unlockedStage && currentStage < car.maxStage) {
+      const upgradeCost = currentStage * 150 + 150;
+      this.upgradeBtn = this.add.image(50, 450, 'btn_resume').setScale(0.5).setInteractive().setOrigin(0, 0.5);
+      this.upgradeLabel = this.add.bitmapText(60, 450, 'pixelFont', `UPGRADE ($${upgradeCost})`, 17.5).setOrigin(0, 0.5);
 
       // Hover effect
       this.upgradeBtn.on('pointerover', () => this.upgradeBtn.setTint(0xdddd00));
@@ -343,19 +352,70 @@ export default class GarageScene extends Phaser.Scene {
       this.add.image(50, 450, 'btn_resume')
         .setScale(0.5)
         .setInteractive()
-        .setOrigin(0, 0.5);
-      this.add.bitmapText(60, 450, 'pixelFont',
-        `MAX LEVEL`, 17.5)
-        .setOrigin(-0.25, 0.5);
-    }
+        .setAlpha(body.key === bodyKey ? 1 : 0.5);
 
+      thumb.on('pointerover', () => thumb.setAlpha(1));
+      thumb.on('pointerout', () => { if (body.key !== this.largeCar.texture.key) thumb.setAlpha(0.5); });
+      thumb.on('pointerdown', () => {
+        if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+        this.largeCar.setTexture(body.key);
+        car.selectedBody = body.key;
+        this.bodyOptions.forEach(t => t.setAlpha(0.5));
+        thumb.setAlpha(1);
+        this.showStart(car);
+      });
+
+      this.bodyOptions.push(thumb);
+    };
+
+    // Wheel selection thumbnails
+    const wheelSpacingX = 80, wheelSpacingY = 50;
+    this.wheelOptions = [];
+    const wheelCenterX = 1010;
+
+    this.wheels.forEach((wheel, i) => {
+      const row = i < 3 ? 0 : 1;
+      const col = i < 3 ? i : i - 3;
+      const numCols = row === 0 ? 3 : 2;
+      const startX = wheelCenterX - ((numCols - 1) * wheelSpacingX) / 2;
+      const x = startX + col * wheelSpacingX;
+      const y = 350 + row * wheelSpacingY;
+
+      const choice = this.add.image(x, y, wheel.key + '_display')
+        .setScale(2)
+        .setInteractive()
+        .setAlpha(wheel.key === this.wheelChoice ? 1 : 0.5);
+
+      choice.on('pointerover', () => choice.setAlpha(1));
+      choice.on('pointerout', () => { if (wheel.key !== this.largeCarWheels.texture.key) choice.setAlpha(0.5); });
+      choice.on('pointerdown', () => {
+        if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+        this.largeCarWheels.setTexture(wheel.key);
+        this.wheelOptions.forEach(t => t.setAlpha(0.5));
+        choice.setAlpha(1);
+        car.selectedWheels = wheel.key;
+        this.wheelChoice = wheel.key;
+        this.showStart(car);
+      });
+
+      this.wheelOptions.push(choice);
+    });
   }
 
+
   showStart(car) {
+    let playerData = this.registry.get("playerData");
     if (this.checkMark) this.checkMark.destroy();
 
-    if (car.key == this.registry.get('selectedCar')) {
+    let selectedData = this.registry.get('selectedCarData') || {};
+    let selectedBody = selectedData.body || this.registry.get('selectedBody');
+    let selectedWheels = selectedData.wheels || this.registry.get('selectedWheels');
+    let selectedCarKey = this.registry.get('selectedCar');
 
+    let carBody = this.bodyChoice || (car.selectedBody || (car.bodies && car.bodies[0].key));
+    let carWheels = this.wheelChoice || 'wheels';
+
+    if (car.key === selectedData.type && car.selectedBody === selectedData.body && car.selectedWheels === selectedData.wheels) {
       this.checkMark = this.add.image(1220, 500, 'check').setScale(0.3);
 
       this.cars.forEach(c => c.colourBox.setVisible(false)); // hide all 
@@ -368,15 +428,20 @@ export default class GarageScene extends Phaser.Scene {
         this.startButton.on('pointerout', () => this.startButton.clearTint());
         this.startButton.on('pointerdown', () => {
           if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-          this.showModeSelection();
+          this.registry.set('selectedCarData', {
+            body: this.bodyChoice,
+            wheels: this.wheelChoice || 'wheels',
+            type: this.CarChoice,
+            stage: playerData.unlockedCars[this.CarChoice] || 1
+          });
+          this.scene.start('RaceScene');
         });
-
         this.add.bitmapText(1150, 670, 'pixelFont', 'START GAME', 20).setOrigin(0.5);
       }
     }
   }
 
-  showModeSelection() {
+  howModeSelection() {
     // Semi-transparent background
 
     const shadow = this.add.rectangle(642, 362, 400, 250, 0x000000, 0.3).setOrigin(0.5);
@@ -426,5 +491,30 @@ export default class GarageScene extends Phaser.Scene {
       cleanup();
       this.scene.start('RaceScene');
     });
+
+  }
+  showStart(car) {
+    if (this.checkMark) this.checkMark.destroy();
+
+    if (car.key == this.registry.get('selectedCar')) {
+
+      this.checkMark = this.add.image(1220, 500, 'check').setScale(0.3);
+
+      this.cars.forEach(c => c.colourBox.setVisible(false)); // hide all 
+      car.colourBox.setVisible(true); // show selected
+
+      // Add start button if not present
+      if (!this.startButton) {
+        this.startButton = this.add.image(1150, 610, 'btn_start').setInteractive().setScale(0.4);
+        this.startButton.on('pointerover', () => this.startButton.setTint(0x888888));
+        this.startButton.on('pointerout', () => this.startButton.clearTint());
+        this.startButton.on('pointerdown', () => {
+          if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+          this.showModeSelection();
+        });
+
+        this.add.bitmapText(1150, 670, 'pixelFont', 'START GAME', 20).setOrigin(0.5);
+      }
+    }
   }
 }
