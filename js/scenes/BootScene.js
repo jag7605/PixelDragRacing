@@ -4,10 +4,12 @@ export default class BootScene extends Phaser.Scene {
   preload() {
     // Backgrounds
     this.load.image('sky', 'assets/backgrounds/sky_day_1440x1080.png');
-    this.load.image('road', 'assets/backgrounds/road_tile_256px.png');
+    this.load.image('road', 'assets/backgrounds/Road_tile.webp');
     this.load.image('finishLine', 'assets/backgrounds/Finish_Line.png');
     this.load.image('cloud', 'assets/backgrounds/pixel_cloud.png');
-    this.load.image('garage_bg', 'assets/backgrounds/garage_bg.png');     
+    this.load.image('garage_bg', 'assets/backgrounds/garage_bg.png'); 
+    this.load.image('sky_night', 'assets/backgrounds/Night.webp');
+    this.load.image('sky_day', 'assets/backgrounds/Day.webp');    
 
 
     // Logo
@@ -52,6 +54,9 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('login', 'assets/ui/buttonImages/login.png');
     this.load.image('arrow', 'assets/ui/buttonImages/arrow.png');
     this.load.image('select', 'assets/ui/buttonImages/select.png');
+    this.load.image('dayIcon', 'assets/ui/buttonImages/Sun.webp');
+    this.load.image('nightIcon', 'assets/ui/buttonImages/Moon.webp');
+
 
     // Sounds
     this.load.audio('buttonSound', 'assets/sound/button_click.mp3');

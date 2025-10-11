@@ -1,7 +1,7 @@
 import Car from '../gameplay/Car.js';
 import Bot from '../gameplay/Bot.js';
-import {savePlayerDataFromScene} from '../utils/playerData.js';
-import {resizeCar} from '../utils/resize.js';
+import { savePlayerDataFromScene } from '../utils/playerData.js';
+import { resizeCar } from '../utils/resize.js';
 
 export default class RaceScene extends Phaser.Scene {
     constructor() {
@@ -103,7 +103,7 @@ export default class RaceScene extends Phaser.Scene {
         };
 
 
-        
+
         // Build animations we need
         const playerAnimKey = makeDriveAnim(selectedKey);
         const botAnimKey = makeDriveAnim('beater_jeep');
@@ -124,11 +124,17 @@ export default class RaceScene extends Phaser.Scene {
         this.trackLength = 3000;
 
         // === Backgrounds ===
-        this.sky = this.add.tileSprite(0, 0, this.trackLength, 720, 'sky').setOrigin(0, 0);
-        this.road = this.add.tileSprite(0, 280, this.trackLength, 256, 'road').setOrigin(0, 0);
+        const mode = this.registry.get('raceMode') || 'day'; // fallback if not set
+        const skyTexture = (mode === 'night') ? 'sky_night' : 'sky_day';
+        this.sky = this.add.tileSprite(0, 0, 7000, 720, skyTexture)
+            .setOrigin(0, 0)
+            .setPosition(0, 0)
+            .setScale(0.5);
+        this.road = this.add.tileSprite(0, 280, this.trackLength, 280, 'road').setOrigin(0, 0);
 
         this.finishLineX = this.trackLength - 200;
-        this.finishLine = this.add.image(this.finishLineX, 280, 'finishLine')
+        this.finishLine = this.add.image(this.finishLineX, 325, 'finishLine')
+            .setScale(0.9)
             .setOrigin(0, 0)
             .setVisible(false);
 
@@ -412,7 +418,7 @@ export default class RaceScene extends Phaser.Scene {
         if (!this.raceStarted) return;
 
         if (this.isPaused) return; // skip update if paused
-        
+
         // === Update car positions based on distance ===
         this.playerCar.sprite.x = 150 + this.playerCar.distance;
         this.botCar.sprite.x = 150 + this.botCar.distance;
@@ -560,7 +566,7 @@ export default class RaceScene extends Phaser.Scene {
 
         //save to localStorage
         savePlayerDataFromScene(this);
-        
+
         this.time.delayedCall(500, () => {
             this.scene.start("EndScene");
         });
