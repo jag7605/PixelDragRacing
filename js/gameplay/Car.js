@@ -6,7 +6,8 @@ import NitrousMiniGame from './NitrousMiniGame.js';
 export default class Car {
     constructor(scene, x, y, upgradeStage = 1) { // scene is the Phaser scene, x and y are the initial position of the car, upgradeStage indicates the level of upgrades (1, 2, or 3)
         this.scene = scene; // Reference to the Phaser scene
-        this.sprite = scene.add.sprite(x, y, 'car').setScale(1); // Create the car sprite at position (x, y) using the 'car' sprite sheet
+        this.x = x;
+        this.y = y;
         this.upgradeStage = upgradeStage;  // Store stage of upgrades (1, 2, or 3)
 
         // Set initial car properties
@@ -33,6 +34,13 @@ export default class Car {
         this.lastRpmBeforeShift = 0; // Temporary storage for RPM before shift (used for tracking perfect shifts)
     }
 
+    create(){
+        const carData = this.scene.registry.get('selectedCarData') || { body: 'gt40', wheels: 'wheels' };
+        
+        this.bodySprite  = this.scene.add.sprite(640, 360, carData.body);
+        this.wheelSprite = this.scene.add.sprite(640, 360, carData.wheels);
+    }
+
     // This method updates the car's position and speed based on input
     // delta is the time since the last frame in milliseconds, cursors is the input for movement, 
     // shiftUpKey and shiftDownKey are for gear shifting, nitrousKey for boost, elapsed for timing stats
@@ -41,17 +49,18 @@ export default class Car {
 
         // play the drive animation only if the car is moving (speed > 0)
         if (this.speed > 0) {
-            if (!this.sprite.anims.isPlaying || this.sprite.anims.currentAnim.key !== 'drive') {
-                if (this.scene.anims.exists('drive')) { // Check if the 'drive' animation exists
-                    this.sprite.play('drive'); // Play the 'drive' animation
-                }
+            if (!this.bodySprite.anims.isPlaying || this.bodySprite.anims.currentAnim.key !== 'driveBody') {
+                if (this.scene.anims.exists('driveBody')) this.bodySprite.play('driveBody');
+            }
+            if (!this.wheelSprite.anims.isPlaying || this.wheelSprite.anims.currentAnim.key !== 'driveWheels') {
+                if (this.scene.anims.exists('driveWheels')) this.wheelSprite.play('driveWheels');
             }
         }
 
         // increase the animation speed based on the car's speed for a more dynamic effect
-        if (this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key === 'drive') {
-            const animSpeed = Phaser.Math.Clamp(this.speed / 100, 0.5, 3); // Clamp animation speed between 0.5 and 3
-            this.sprite.anims.msPerFrame = 1000 / (10 * animSpeed); // Adjust msPerFrame based on speed
+        if (this.bodySprite.anims.isPlaying && this.bodySprite.anims.currentAnim.key === 'driveBody') {
+            const animSpeed = Phaser.Math.Clamp(this.speed / 100, 0.5, 3);
+            this.bodySprite.anims.msPerFrame = 1000 / (10 * animSpeed);
         }
 
         // Gear shifting
@@ -304,7 +313,7 @@ export default class Car {
     }
 
     // method to reset car properties on race restart
-    reset() {
+    reset(x, y) {
         this.speed = 0; // reset speed to 0
         this.gearSystem.reset; // reset the gear system 
         this.rpm = 800; // reset RPM to idle
@@ -319,5 +328,7 @@ export default class Car {
         this.perfectShifts = 0; // reset perfect shift count
         this.lastRpmBeforeShift = 0; // reset last RPM before shift
         this.upgradeStage = this.scene.registry.get('upgrades')[this.scene.registry.get('selectedCar')] || 1;  // Reload if needed
+        this.bodySprite.setPosition(x, y);
+        this.wheelSprite.setPosition(x, y);
     }
 }
