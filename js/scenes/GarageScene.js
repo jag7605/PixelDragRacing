@@ -1,4 +1,5 @@
 import {savePlayerDataFromScene} from '../utils/playerData.js';
+import NitrousTuner from '../gameplay/NitrousTuner.js';
 export default class GarageScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GarageScene' });
@@ -173,6 +174,25 @@ export default class GarageScene extends Phaser.Scene {
         if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
         this.scene.start('MenuScene');
     });
+
+    // Nitrous tuning button
+    this.tuneButton = this.add.image(185, 550, 'btn_resume')
+    .setInteractive()
+    .setScale(0.3)
+    .setDepth(10)
+    .on('pointerover', () => this.tuneButton.setTint(0xdddd00))
+    .on('pointerout', () => this.tuneButton.clearTint())
+    .on('pointerdown', () => {
+        if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+        if (!this.tuningOverlay) {
+            this.tuningOverlay = new NitrousTuner(this);
+        }
+    });
+this.add.bitmapText(185, 550, 'pixelFont', 'Tune Nitrous', 12)
+    .setOrigin(0.5)
+    .setTint(0xffffff)
+    .setDepth(11);
+this.tuningOverlay = null;
 
   }
 

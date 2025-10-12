@@ -19,11 +19,12 @@ export default class Car {
         this.acceleration = 0; // Initial acceleration set to 0
         this.isAccelerating = false; // Flag to check if the car is accelerating
 
-        // Set nitrous speed boost properties
+        // Set nitrous speed boost properties from tuning or default
+        const tuning = this.scene.registry.get('nitrousTuning') || { power: 2.0, duration: 5000 };
         this.nitrousActive = false; // Flag to check if nitrous is active
-        this.nitrousDuration = 3000; // Nitrous lasts for 3 seconds. (I will most likey adjust this later and find a sweet spot)
+        this.nitrousDuration = tuning.duration; // Tuned duration (e.g., 7500ms, 5000ms, 2500ms)
         this.nitrousCooldown = 0; // Cooldown time after using nitrous (will adjust further down)
-        this.nitrousBoost = 1.8; // Increased speed multiplier for more noticeable boost
+        this.nitrousBoost = tuning.power; // Tuned power (e.g., 1.5, 2.0, 2.5)
 
         // Set up basic stats tracking
         this.zeroToHundredTime = null; // Time taken to go from 0 to 100 km/h (kept null until achieved)
@@ -34,10 +35,10 @@ export default class Car {
         this.lastRpmBeforeShift = 0; // Temporary storage for RPM before shift (used for tracking perfect shifts)
     }
 
-    create(){
+    create() {
         const carData = this.scene.registry.get('selectedCarData') || { body: 'gt40', wheels: 'wheels' };
-        
-        this.bodySprite  = this.scene.add.sprite(640, 360, carData.body);
+
+        this.bodySprite = this.scene.add.sprite(640, 360, carData.body);
         this.wheelSprite = this.scene.add.sprite(640, 360, carData.wheels);
     }
 
