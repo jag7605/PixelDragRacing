@@ -85,7 +85,7 @@ export default class NitrousTuner {
             .setDepth(7);
 
         // Make the bar interactive for clicking to jump
-        this.volumeBar = this.scene.add.rectangle(centerX, barY + cfg.sliderHeight/2, cfg.sliderWidth, cfg.sliderHeight, cfg.sliderColor, cfg.sliderAlpha)
+        this.nitrousBar = this.scene.add.rectangle(centerX, barY + cfg.sliderHeight/2, cfg.sliderWidth, cfg.sliderHeight, cfg.sliderColor, cfg.sliderAlpha)
             .setScrollFactor(0)
             .setDepth(7)
             .setInteractive()
@@ -245,7 +245,7 @@ export default class NitrousTuner {
         // Destroy other objects
         this.handle?.destroy();
         this.overlayBg?.destroy();
-        this.volumeBar?.destroy();
+        this.nitrousBar?.destroy();
 
         // Clear reference in scene
         this.scene.tuningOverlay = null;

@@ -1,10 +1,11 @@
 {
   "name": "pixeldragracing",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,10 @@
     "phaser": "^3.90.0"
   },
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.28.3",
+    "babel-jest": "^30.2.0",
+    "http-server": "^14.1.1",
+    "jest": "^30.2.0"
   }
 }
