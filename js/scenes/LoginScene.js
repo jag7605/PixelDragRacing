@@ -73,6 +73,13 @@ export default class LoginScene extends Phaser.Scene {
                         }
                     }
                     this.registry.set('upgrades', upgrades);
+                    //reset choices
+                    this.registry.set('selectedCarData', {
+                        body: 'ferrari_white',
+                        wheels: 'wheels',
+                        type: 'ferrari',
+                        stage: upgrades['ferrari']
+                    });
                     this.scene.stop();
                     this.scene.start("MenuScene");
                     this.scene.launch('ProfileScene');

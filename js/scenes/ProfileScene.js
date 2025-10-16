@@ -111,6 +111,14 @@ export default class ProfileScene extends Phaser.Scene {
                     upgrades[carKey] = playerData.unlockedCars[carKey];
                 }
             }
+
+            this.registry.set('selectedCarData', {
+                body: 'ferrari_white',
+                wheels: 'wheels',
+                type: 'ferrari',
+                stage: 1
+            });
+
             this.registry.set('upgrades', upgrades);
             this.scene.stop();
             this.scene.start('MenuScene');
