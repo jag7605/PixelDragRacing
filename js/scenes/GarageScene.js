@@ -1,5 +1,4 @@
 import {savePlayerDataFromScene} from '../utils/playerData.js';
-import NitrousTuner from '../gameplay/NitrousTuner.js';
 export default class GarageScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GarageScene' });
@@ -20,33 +19,35 @@ export default class GarageScene extends Phaser.Scene {
           { key: 'ferrari_white', name: 'white', cost: 0 },
           { key: 'ferrari_red', name: 'red', cost: 0 }
         ],},
-        { key: 'porsche', scale: 1.8, wheelScale: 0.86, wheelX: 5, wheelY: 0, y: 80, cost: 700, level: 2, stage: 1, maxStage: 3, bodies: [
+        { key: 'gt40', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 0, y: 80, cost: 100, level: 1, stage: 1, maxStage: 3,bodies: [
+            { key: 'gt40_white', name: 'Classic', cost: 0 },
+            { key: 'gt40_black', name: 'Black', cost: 0 },
+            { key: 'gt40_blue', name: 'Blue', cost: 0 }
+        ],},
+        { key: 'golf', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 2, y: 80, cost: 300, level: 2, stage: 1, maxStage: 3,bodies: [
+            { key: 'golf_white', name: 'Classic', cost: 0 },
+            { key: 'golf_green', name: 'Green', cost: 0 }
+        ],},
+        { key: 'porsche', scale: 1.8, wheelScale: 0.86, wheelX: 5, wheelY: 0, y: 80, cost: 500, level: 2, stage: 1, maxStage: 3, bodies: [
           { key: 'porsche_red_white', name: 'Classic', cost: 0 },
           { key: 'porsche_white', name: 'Black', cost: 0 }
         ],},
         { key: 'nissan', scale: 1.6, wheelScale: 0.92, wheelX: 2, wheelY: 10, y: 80, cost: 800, level: 3, stage: 1, maxStage: 3, bodies: [
           { key: 'nissan_blue', name: 'grey', cost: 0 },
           { key: 'nissan_white', name: 'yellow', cost: 0 }
-    ],},
-        { key: 'gt40', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 0, y: 80, cost: 0, level: 1, stage: 1, maxStage: 3,bodies: [
-            { key: 'gt40_white', name: 'Classic', cost: 0 },
-            { key: 'gt40_black', name: 'Black', cost: 0 },
-            { key: 'gt40_blue', name: 'Blue', cost: 0 }
-          ],},
-        { key: 'mustang', scale: 1.8, wheelScale: 0.93, wheelX: 3, wheelY: 0, y: 80, cost: 1000, level: 4, stage: 1, maxStage: 3,bodies: [
+        ],},
+        { key: 'mustang', scale: 1.8, wheelScale: 0.93, wheelX: 3, wheelY: 0, y: 80, cost: 900, level: 3, stage: 1, maxStage: 3,bodies: [
             { key: 'mustang_white', name: 'Classic', cost: 0 },
             { key: 'mustang_black', name: 'Black', cost: 0 },
             { key: 'mustang_blue', name: 'Blue', cost: 0 }
         ],},
-        { key: 'golf', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 2, y: 80, cost: 100, level: 2, stage: 1, maxStage: 3,bodies: [
-            { key: 'golf_white', name: 'Classic', cost: 0 },
-            { key: 'golf_green', name: 'Green', cost: 0 }
-        ],},
-        { key: 'lamborghini', scale: 1.8, wheelScale: 0.97, wheelX: 3.5, wheelY: 0, y: 80, cost: 600, level: 3, stage: 1, maxStage: 3,bodies: [
+        { key: 'lamborghini', scale: 1.8, wheelScale: 0.97, wheelX: 3.5, wheelY: 0, y: 80, cost: 1000, level: 4, stage: 1, maxStage: 3,bodies: [
             { key: 'lamborghini_white', name: 'Classic', cost: 0 },
             { key: 'lamborghini_yellow', name: 'yellow', cost: 0 }
         ],},
-
+        { key: 'trollcar', scale: 0.8, y: 50, cost: 1500, level: 5, stage: 1, maxStage: 3, hasWheels: false, bodies: [
+            { key: 'trollcar_white', name: 'Troll', cost: 0 }
+        ] },
     ];
 
     this.wheels = [
@@ -127,7 +128,16 @@ export default class GarageScene extends Phaser.Scene {
         const displayKey = car.bodies ? car.bodies[0].key : car.key;
 
         // Combine into container at correct position
-        const carContainer = this.add.container(x + this.wheelX, car.y + this.wheelY, [this.add.sprite(0, 0, displayKey).setScale(car.scale), this.add.sprite(0, 0, 'wheels').setScale(car.scale * this.wheelScale, car.scale)]);
+        let sprites = [this.add.sprite(0, 0, displayKey).setScale(car.scale)];
+        if (car.hasWheels !== false) {
+            sprites.push(this.add.sprite(0, 0, 'wheels').setScale(car.scale * car.wheelScale, car.scale));
+        }
+
+        const carContainer = this.add.container(
+            x + (car.wheelX || 0),
+            car.y + (car.wheelY || 0),
+            sprites);
+
         carContainer.setSize(200, 120); // approximate hit area
         carContainer.setInteractive(
             new Phaser.Geom.Rectangle(-100, -60, 200, 120),
@@ -201,11 +211,11 @@ export default class GarageScene extends Phaser.Scene {
             this.tuningOverlay = new NitrousTuner(this);
         }
     });
-this.add.bitmapText(185, 550, 'pixelFont', 'Tune Nitrous', 12)
-    .setOrigin(0.5)
-    .setTint(0xffffff)
-    .setDepth(11);
-this.tuningOverlay = null;
+    this.add.bitmapText(185, 550, 'pixelFont', 'Tune Nitrous', 12)
+        .setOrigin(0.5)
+        .setTint(0xffffff)
+        .setDepth(11);
+    this.tuningOverlay = null;
 
   }
 
@@ -236,8 +246,14 @@ this.tuningOverlay = null;
     this.largeCar = this.add.sprite(640, fixedBottomY, bodyKey).setScale(car.scale + 0.8).setOrigin(0.5, 1);
 
     // Large wheels
-    this.largeCarWheels = this.add.sprite(640 + car.wheelX, fixedBottomY - 80 + car.wheelY, this.wheelChoice)
-        .setScale((car.scale + 0.8) * car.wheelScale, car.scale + 0.8);
+    if (car.hasWheels !== false) {
+        this.largeCarWheels = this.add.sprite(640 + (car.wheelX || 0), fixedBottomY - 80 + (car.wheelY || 0), this.wheelChoice)
+            .setScale(((car.scale + 0.8) * (car.wheelScale || 1)), car.scale + 0.8);
+    } 
+    else {
+        this.largeCarWheels = this.add.rectangle(640, fixedBottomY - 40, 200, 80, 0x00ff00, 0.2);
+        this.largeCarWheels.setVisible(false);
+    }
 
     this.largeCarContainer = this.add.container(0, 0, [this.largeCar, this.largeCarWheels]);
 
@@ -299,12 +315,12 @@ this.tuningOverlay = null;
                 savePlayerDataFromScene(this);
                 this.showLargeCar(car);
                 return;
-            } else if (playerData.currency < car.level) {
+            } else if (playerData.level < car.level) {
               this.selectButton.setText(`LEVEL ${car.level} REQUIRED`);
                 this.selectButton.setFontSize(22);
                 return;
                 
-            } else if (playerData.level < car.cost) {
+            } else if (playerData.currency < car.cost) {
                 this.selectButton.setText("NOT ENOUGH $");
                 this.selectButton.setFontSize(22);
                 return;
@@ -394,10 +410,14 @@ this.tuningOverlay = null;
     const numBodies = car.bodies.length;
     const centerX = 1010;
     const startX = centerX - ((numBodies - 1) * spacing) / 2;
+    let add = 0;
+    if (car.key === 'trollcar') {
+        add = -30;
+    }
 
     car.bodies.forEach((body, i) => {
         const x = startX + i * spacing;
-        const thumb = this.add.image(x, 280, body.key)
+        const thumb = this.add.image(x, 280+add, body.key)
             .setScale(0.5)
             .setInteractive()
             .setAlpha(body.key === bodyKey ? 1 : 0.5);
@@ -417,37 +437,46 @@ this.tuningOverlay = null;
     });
 
     // Wheel selection thumbnails
-    const wheelSpacingX = 80, wheelSpacingY = 50;
-    this.wheelOptions = [];
-    const wheelCenterX = 1010;
+    if (car.hasWheels !== false) {
+        const wheelSpacingX = 80, wheelSpacingY = 50;
+        this.wheelOptions = [];
+        const wheelCenterX = 1010;
 
-    this.wheels.forEach((wheel, i) => {
-        const row = i < 3 ? 0 : 1;
-        const col = i < 3 ? i : i - 3;
-        const numCols = row === 0 ? 3 : 2;
-        const startX = wheelCenterX - ((numCols - 1) * wheelSpacingX) / 2;
-        const x = startX + col * wheelSpacingX;
-        const y = 350 + row * wheelSpacingY;
+        this.wheels.forEach((wheel, i) => {
+            const row = i < 3 ? 0 : 1;
+            const col = i < 3 ? i : i - 3;
+            const numCols = row === 0 ? 3 : 2;
+            const startX = wheelCenterX - ((numCols - 1) * wheelSpacingX) / 2;
+            const x = startX + col * wheelSpacingX;
+            const y = 350 + row * wheelSpacingY;
 
-        const choice = this.add.image(x, y, wheel.key + '_display')
-            .setScale(2)
-            .setInteractive()
-            .setAlpha(wheel.key === this.wheelChoice ? 1 : 0.5);
+            const choice = this.add.image(x, y, wheel.key + '_display')
+                .setScale(2)
+                .setInteractive()
+                .setAlpha(wheel.key === this.wheelChoice ? 1 : 0.5);
 
-        choice.on('pointerover', () => choice.setAlpha(1));
-        choice.on('pointerout', () => { if (wheel.key !== this.largeCarWheels.texture.key) choice.setAlpha(0.5); });
-        choice.on('pointerdown', () => {
-            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-            this.largeCarWheels.setTexture(wheel.key);
-            this.wheelOptions.forEach(t => t.setAlpha(0.5));
-            choice.setAlpha(1);
-            car.selectedWheels = wheel.key;
-            this.wheelChoice = wheel.key;
-            this.showStart(car);
+            choice.on('pointerover', () => choice.setAlpha(1));
+            choice.on('pointerout', () => { 
+                if (this.largeCarWheels && this.largeCarWheels.texture && wheel.key !== this.largeCarWheels.texture.key) 
+                    choice.setAlpha(0.5); 
+            });
+
+            choice.on('pointerdown', () => {
+                if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+                if (this.largeCarWheels && this.largeCarWheels.setTexture) {
+                    this.largeCarWheels.setTexture(wheel.key);
+                }
+                this.wheelOptions.forEach(t => t.setAlpha(0.5));
+                choice.setAlpha(1);
+                car.selectedWheels = wheel.key;
+                this.wheelChoice = wheel.key;
+                this.showStart(car);
+            });
+
+
+            this.wheelOptions.push(choice);
         });
-
-        this.wheelOptions.push(choice);
-    });
+    }
 }
 
   

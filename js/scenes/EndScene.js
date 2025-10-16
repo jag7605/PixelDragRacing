@@ -100,6 +100,10 @@ export default class EndScene extends Phaser.Scene {
             // play sound effect only if not muted
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
 
+            if (raceScene.bgMusic) {
+                raceScene.bgMusic.stop();
+            }
+
             this.cameras.main.fadeOut(500, 0, 0, 0);
 
             this.time.delayedCall(500, () => {

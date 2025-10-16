@@ -31,6 +31,7 @@ export default class SettingsScene extends Phaser.Scene {
 
         //info button
         const infoButton = this.createButton(640, 300, 'info', 0.5, () => {
+            this.scene.pause();
             this.scene.launch('InfoScene');
             //bring to top
             this.scene.bringToTop('InfoScene');
@@ -94,6 +95,9 @@ export default class SettingsScene extends Phaser.Scene {
 
             if (this.scene.isPaused('MenuScene')) {
                 this.scene.resume('MenuScene');
+            }
+            if (this.scene.isPaused('PauseScene')) {
+                this.scene.resume('PauseScene');
             }
 
             this.scene.stop();

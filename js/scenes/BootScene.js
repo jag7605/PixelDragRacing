@@ -17,6 +17,7 @@ export default class BootScene extends Phaser.Scene {
 
     // Cars
     this.load.spritesheet('beater_jeep', 'assets/cars/beater_jeep_ride.png', { frameWidth: 256, frameHeight: 86 });
+    this.load.spritesheet('trollcar_white', 'assets/cars/troll.png', { frameWidth: 256, frameHeight: 200 });
 
     //body gt40
     this.load.spritesheet('gt40_black', 'assets/cars/car_body/gt40_black.png', { frameWidth: 112, frameHeight: 64 });

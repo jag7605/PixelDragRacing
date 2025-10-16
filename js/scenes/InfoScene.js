@@ -1,3 +1,5 @@
+import { addWrappedTextArray } from '../utils/wordWrap.js';
+
 export default class InfoScene extends Phaser.Scene {
     constructor() {
         super('InfoScene');
@@ -63,7 +65,7 @@ export default class InfoScene extends Phaser.Scene {
 
         //add tips
         const tips = [
-            "- Shift perfectly to get a speed boost",
+            "- Shift perfectly to gain a speed boost",
             "- Use Nitrous wisely, it has cooldown",
             "- Beat your opponent to the finish line!",
             "- Avoid late or early shifts — mistimed shifts slow you down.",
@@ -131,6 +133,13 @@ export default class InfoScene extends Phaser.Scene {
             if (this.scene.isPaused('MenuScene')) {
                 this.scene.resume('MenuScene');
             }
+            if (this.scene.isPaused('SettingsScene')) {
+                this.scene.resume('SettingsScene');
+            }
+
+            if (this.scene.isPaused('PauseScene')) {
+                this.scene.resume('PauseScene');
+            }
 
             this.scene.stop();
         });
@@ -138,42 +147,4 @@ export default class InfoScene extends Phaser.Scene {
     }
 
     
-}
-
-// Helper function for word wrapping bitmapText
-function addWrappedTextArray(scene, container, startX, startY, textArray, font, fontSize, maxWidth, lineSpacing = 5, tint = 0xffffff) {
-    let yOffset = 0;
-
-    textArray.forEach(text => {
-        const words = text.split(' ');
-        let line = '';
-
-        words.forEach(word => {
-            const testLine = line + word + ' ';
-            const testText = scene.add.bitmapText(0, 0, font, testLine, fontSize);
-            if (testText.width > maxWidth) {
-                container.add(
-                    scene.add.bitmapText(startX, startY + yOffset, font, line.trim(), fontSize)
-                        .setOrigin(0.5)
-                        .setTint(tint)
-                );
-                yOffset += fontSize + lineSpacing;
-                line = word + ' ';
-            } else {
-                line = testLine;
-            }
-            testText.destroy();
-        });
-
-        if (line.trim() !== '') {
-            container.add(
-                scene.add.bitmapText(startX, startY + yOffset, font, line.trim(), fontSize)
-                    .setOrigin(0.5)
-                    .setTint(tint)
-            );
-            yOffset += fontSize + lineSpacing;
-        }
-    });
-
-    return yOffset;
 }

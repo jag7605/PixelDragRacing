@@ -21,7 +21,7 @@ export default class ProfileScene extends Phaser.Scene {
         this.add.bitmapText(640, 235, 'pixelFont', `Hello, ${playerData.username}`, 35).setOrigin(0.5, 0.5).setCenterAlign().setTint(0x852020);
 
         // display money
-        this.add.bitmapText(640, 280, 'pixelFont', `Current Money Amount: $${playerData.currency.toString()}`, 18)
+        this.add.bitmapText(640, 280, 'pixelFont', `Current Prize: $${playerData.currency.toString()}`, 18)
             .setOrigin(0.5)
             .setTint(0x852020);
 
@@ -66,6 +66,12 @@ export default class ProfileScene extends Phaser.Scene {
             const carImage = this.add.image(x, y, carKey +"_white")
                 .setOrigin(0.5)
                 .setScale(1);
+            
+            //if troll car make smaller
+            if(carKey == 'trollcar'){
+                carImage.setScale(0.5);
+                carImage.setPosition(x, y-25);
+            }
 
             // car name
             this.add.bitmapText(x, y + 50, 'pixelFont', carKey.toUpperCase(), 14)

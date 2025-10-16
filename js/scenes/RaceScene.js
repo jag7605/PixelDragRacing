@@ -122,10 +122,16 @@ export default class RaceScene extends Phaser.Scene {
         this.botCar.sprite.setTexture('beater_jeep');
         this.botCar.sprite.play(botAnimKey);
 
-        resizeCar(this.playerCar.bodySprite, desiredHeight, groundY, 0);
-        resizeCar(this.playerCar.wheelSprite, desiredHeight, groundY, this.registry.get('wheelScale'));
-        resizeCar(this.botCar.sprite, desiredHeight, groundY - 100, 0);
+        resizeCar(this.playerCar.bodySprite, desiredHeight, groundY, 0, false);
+        resizeCar(this.playerCar.wheelSprite, desiredHeight, groundY, this.registry.get('wheelScale'), false);
+        resizeCar(this.botCar.sprite, desiredHeight, groundY - 100, 0, false);
 
+        //if its a troll car, make wheels invisible
+        if(carData.body === 'trollcar_white'){
+            this.playerCar.wheelSprite.setVisible(false);
+            resizeCar(this.playerCar.bodySprite, desiredHeight, groundY, 0, true); // make bigger
+        }
+        
         this.resetRace();   // safe now, because cars exist
 
         // === Track length (in px) ===
