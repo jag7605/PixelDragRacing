@@ -76,6 +76,9 @@ export default class GarageScene extends Phaser.Scene {
     this.add.image(30, 30, 'moneyIcon').setScale(0.03);
     this.moneyText = this.add.bitmapText(70, 20, 'pixelFont', `$${playerData.currency}`, 20).setOrigin(0, 0);
 
+    //display level
+    this.levelText = this.add.bitmapText(90, 70, 'pixelFont', `Level: ${playerData.level}`, 20).setOrigin(0.5);
+
     // Scroll container
     this.carContainer = this.add.container(640, 550); // centered at bottom
     //set mask for start button
@@ -382,6 +385,15 @@ export default class GarageScene extends Phaser.Scene {
                 playerData.currency -= upgradeCost;
                 playerData.unlockedCars[car.key] = currentStage + 1;
                 this.registry.set('playerData', playerData);
+                //update upgrades
+                const upgrades = {};
+                for (const carKey in playerData.unlockedCars) {
+                    if (playerData.unlockedCars.hasOwnProperty(carKey)) {
+                        upgrades[carKey] = playerData.unlockedCars[carKey];
+                    }
+                }
+                this.registry.set('upgrades', upgrades);
+                
                 savePlayerDataFromScene(this);
                 confirmBox.destroy(); confirmText.destroy(); yesBtn.destroy(); noBtn.destroy();
                 this.moneyText.setText(`$${playerData.currency}`);

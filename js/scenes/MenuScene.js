@@ -1,4 +1,5 @@
 import MenuUi from '../ui/MenuUi.js';
+import {savePlayerDataFromScene} from '../utils/playerData.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
@@ -77,10 +78,37 @@ export default class MenuScene extends Phaser.Scene {
 
         //display money
         this.add.image(30, 30, 'moneyIcon').setScale(0.03);
-        this.add.bitmapText(70,  32, 'pixelFont', `$${playerData.currency.toString()}`, 24).setOrigin(0, 0.5);
+        this.moneyText = this.add.bitmapText(70,  32, 'pixelFont', `$${playerData.currency.toString()}`, 24).setOrigin(0, 0.5);
+
+        //display level
+        this.levelText = this.add.bitmapText(90, 70, 'pixelFont', `Level: ${playerData.level}`, 20).setOrigin(0.5);
 
         //diplay username at top when logged in
         this.add.bitmapText(640,  32, 'pixelFont', `Hello, ${playerData.username}`, 24).setOrigin(0.5);
+
+        const levelButton = this.add.bitmapText(20, 110, 'pixelFont', 'add level', 10).setInteractive();
+        levelButton.on('pointerover', () => levelButton.setTint(0x888888));
+        levelButton.on('pointerout', () => levelButton.clearTint());
+        levelButton.on('pointerdown', () => {
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            playerData.level += 1;
+            this.levelText.destroy();
+            this.levelText = this.add.bitmapText(90, 70, 'pixelFont', `Level: ${playerData.level}`, 20).setOrigin(0.5);
+            this.registry.set("playerData", playerData);
+            savePlayerDataFromScene(this);
+        });
+
+        const moneyButton = this.add.bitmapText(20, 130, 'pixelFont', 'add money', 10).setInteractive();
+        moneyButton.on('pointerover', () => moneyButton.setTint(0x888888));
+        moneyButton.on('pointerout', () => moneyButton.clearTint());
+        moneyButton.on('pointerdown', () => {
+            if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+            playerData.currency += 100;
+            this.moneyText.destroy();
+            this.moneyText = this.add.bitmapText(70, 20, 'pixelFont', `$${playerData.currency}`, 20).setOrigin(0, 0);
+            this.registry.set("playerData", playerData);
+            savePlayerDataFromScene(this);
+        });
 
   }
         
