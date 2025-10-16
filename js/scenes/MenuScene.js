@@ -73,6 +73,9 @@ export default class MenuScene extends Phaser.Scene {
         this.add.image(30, 30, 'moneyIcon').setScale(0.03);
         this.add.bitmapText(70,  32, 'pixelFont', `$${playerData.currency.toString()}`, 24).setOrigin(0, 0.5);
 
+        //diplay username at top when logged in
+        this.add.bitmapText(640,  32, 'pixelFont', `Hello, ${playerData.username}`, 24).setOrigin(0.5);
+
   }
         
 }
