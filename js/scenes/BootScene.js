@@ -35,6 +35,20 @@ export default class BootScene extends Phaser.Scene {
     this.load.spritesheet('nissan_blue', 'assets/cars/car_body/nissan_blue.png', { frameWidth: 112, frameHeight: 64 });
     this.load.spritesheet('nissan_white', 'assets/cars/car_body/nissan_white.png', { frameWidth: 112, frameHeight: 64 });
 
+    //golf body
+    this.load.spritesheet('golf_white', 'assets/cars/car_body/golf_white.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('golf_green', 'assets/cars/car_body/golf_green.png', { frameWidth: 112, frameHeight: 64 });
+
+    //mustang body
+    this.load.spritesheet('mustang_white', 'assets/cars/car_body/mustang_white.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('mustang_blue', 'assets/cars/car_body/mustang_blue.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('mustang_black', 'assets/cars/car_body/mustang_black.png', { frameWidth: 112, frameHeight: 64 });
+
+    //lamborghini body
+    this.load.spritesheet('lamborghini_white', 'assets/cars/car_body/lamborghini_white.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('lamborghini_yellow', 'assets/cars/car_body/lamborghini_yellow.png', { frameWidth: 112, frameHeight: 64 });
+
+
     //wheels
     this.load.spritesheet('wheels', 'assets/cars/car_wheel/wheels.png', { frameWidth: 112, frameHeight: 64 });
     this.load.spritesheet('wheel1', 'assets/cars/car_wheel/wheel1.png', { frameWidth: 112, frameHeight: 64 });
