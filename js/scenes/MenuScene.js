@@ -66,7 +66,13 @@ export default class MenuScene extends Phaser.Scene {
         //login button
         ui.createButton(W - 110, 40, 'login', null, 0.37, 0.4, () => {
             this.scene.pause();
-            this.scene.launch('LoginScene');
+            if(playerData.username != 'Guest'){
+                this.scene.launch('ProfileScene');
+            }
+            else{
+                this.scene.launch('LoginScene');
+            }
+            
         });
 
         //display money

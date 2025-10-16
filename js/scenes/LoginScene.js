@@ -64,9 +64,8 @@ export default class LoginScene extends Phaser.Scene {
                 let playerData = JSON.parse(savedData);
 
                 if (playerData.password === password) {
-                    // Success → store active user in registry
+                    // Success - store active user in registry
                     this.registry.set("playerData", playerData);
-                    this.registry.set("activeUser", username);
                     const upgrades = {};
                     for (const carKey in playerData.unlockedCars) {
                         if (playerData.unlockedCars.hasOwnProperty(carKey)) {
@@ -74,7 +73,9 @@ export default class LoginScene extends Phaser.Scene {
                         }
                     }
                     this.registry.set('upgrades', upgrades);
+                    this.scene.stop();
                     this.scene.start("MenuScene");
+                    this.scene.launch('ProfileScene');
                 } else {
                     errorText.setText('Incorrect password. Please try again.');
                 }

@@ -106,13 +106,12 @@ export default class SignUpScene extends Phaser.Scene {
                     fastestTime: this.registry.get("playerData").fastestTime
                 };
                 localStorage.setItem(username, JSON.stringify(playerData));
-                console.log("New account created!");
                 
-
                 //log in immediately
                 this.registry.set("playerData", playerData);
                 this.registry.set("activeUser", username);
                 this.scene.start("MenuScene");
+                this.scene.launch('ProfileScene');
 
             }
 

@@ -21,7 +21,7 @@ export default class BootScene extends Phaser.Scene {
     //body gt40
     this.load.spritesheet('gt40_black', 'assets/cars/car_body/gt40_black.png', { frameWidth: 112, frameHeight: 64 });
     this.load.spritesheet('gt40_blue', 'assets/cars/car_body/gt40_blue.png', { frameWidth: 112, frameHeight: 64 });
-    this.load.spritesheet('gt40', 'assets/cars/car_body/gt40.png', { frameWidth: 112, frameHeight: 64 });
+    this.load.spritesheet('gt40_white', 'assets/cars/car_body/gt40.png', { frameWidth: 112, frameHeight: 64 });
 
     //porsche body
     this.load.spritesheet('porsche_red_white', 'assets/cars/car_body/porsche_red_white.png', { frameWidth: 112, frameHeight: 64 });

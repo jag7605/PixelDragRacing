@@ -28,8 +28,8 @@ export default class GarageScene extends Phaser.Scene {
           { key: 'nissan_blue', name: 'grey', cost: 0 },
           { key: 'nissan_white', name: 'yellow', cost: 0 }
     ],},
-        { key: 'ford_gt40', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 0, y: 80, cost: 0, level: 1, stage: 1, maxStage: 3,bodies: [
-            { key: 'gt40', name: 'Classic', cost: 0 },
+        { key: 'gt40', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 0, y: 80, cost: 0, level: 1, stage: 1, maxStage: 3,bodies: [
+            { key: 'gt40_white', name: 'Classic', cost: 0 },
             { key: 'gt40_black', name: 'Black', cost: 0 },
             { key: 'gt40_blue', name: 'Blue', cost: 0 }
           ],},

@@ -10,6 +10,7 @@ import SettingsScene from './js/scenes/SettingsScene.js';
 import GarageScene from './js/scenes/GarageScene.js';
 import LoginScene from './js/scenes/LoginScene.js';
 import SignUpScene from './js/scenes/SignUpScene.js';
+import ProfileScene from './js/scenes/ProfileScene.js';
 
 
 // Phaser game configuration (preserving your prototype settings)
@@ -36,7 +37,8 @@ const config = {
         SettingsScene,
         GarageScene,
         LoginScene,
-        SignUpScene
+        SignUpScene,
+        ProfileScene
     ],
     dom: {
         createContainer: true  // enables DOM elements for login/signup
@@ -45,12 +47,5 @@ const config = {
 
 // Create a new Phaser game instance
 const game = new Phaser.Game(config);
-
-// Initialize upgrades in registry (per car, default stage 1)
-game.registry.set('upgrades', {
-    'beater_car': 1,
-    'beater_jeep': 1
-    // Will likely add more cars here later
-});
 
 console.log('Game initialized'); // Debug log to confirm game starts
