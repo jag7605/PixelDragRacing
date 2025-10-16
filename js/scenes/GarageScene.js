@@ -1,4 +1,5 @@
 import {savePlayerDataFromScene} from '../utils/playerData.js';
+import NitrousTuner from '../gameplay/NitrousTuner.js';
 export default class GarageScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GarageScene' });
