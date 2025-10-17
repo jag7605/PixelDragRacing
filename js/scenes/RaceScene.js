@@ -70,7 +70,7 @@ export default class RaceScene extends Phaser.Scene {
 
     create() {
 
-        const carData = this.registry.get('selectedCarData') || { body: 'gt40', wheels: 'wheels', wheelScale: 1};
+        const carData = this.registry.get('selectedCarData') || { body: 'gt40', wheels: 'wheels', wheelScale: 1 };
         const upgrades = this.registry.get('upgrades');
         const upgradeStage = upgrades[carData.type];
 
@@ -80,7 +80,9 @@ export default class RaceScene extends Phaser.Scene {
 
         this.playerCar = new Car(this, 150, 410, upgradeStage);
         this.playerCar.create();
-        this.botCar = new Bot(this, 150, 310, 0.1);
+        // bot skill selection
+        const botSkill = this.registry.get('botSkill') || 0.7; // fallback to Normal if not set
+        this.botCar = new Bot(this, 150, 310, botSkill);
 
         // Helper: ensure an animation exists for a given spritesheet key
         const makeDriveAnim = (key, fps = 24) => {
@@ -127,11 +129,11 @@ export default class RaceScene extends Phaser.Scene {
         resizeCar(this.botCar.sprite, desiredHeight, groundY - 100, 0, false);
 
         //if its a troll car, make wheels invisible
-        if(carData.body === 'trollcar_white'){
+        if (carData.body === 'trollcar_white') {
             this.playerCar.wheelSprite.setVisible(false);
             resizeCar(this.playerCar.bodySprite, desiredHeight, groundY, 0, true); // make bigger
         }
-        
+
         this.resetRace();   // safe now, because cars exist
 
         // === Track length (in px) ===
@@ -495,10 +497,10 @@ export default class RaceScene extends Phaser.Scene {
         // === Finish line check ===
         //player crosses finish line
         const playerRightEdge =
-        this.playerCar.bodySprite.x + (this.playerCar.bodySprite.displayWidth * (1 - this.playerCar.bodySprite.originX));
+            this.playerCar.bodySprite.x + (this.playerCar.bodySprite.displayWidth * (1 - this.playerCar.bodySprite.originX));
 
         const botRightEdge =
-        this.botCar.sprite.x + (this.botCar.sprite.displayWidth * (1 - this.botCar.sprite.originX));
+            this.botCar.sprite.x + (this.botCar.sprite.displayWidth * (1 - this.botCar.sprite.originX));
 
         // Player crosses finish
         if (!this.playerCar.finishTime && playerRightEdge >= this.finishLine.x) {

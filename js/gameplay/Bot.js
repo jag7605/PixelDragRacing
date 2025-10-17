@@ -45,9 +45,21 @@ export default class Bot {
         // Auto-shift logic
         if (this.rpm >= this.nextShiftRPM) {
             if (this.gearSystem.shiftUp()) {
+                console.log(`Bot (${this.skill}) shifted up at ${this.rpm.toFixed(0)} RPM`);
+                const lastRpmBeforeShift = this.rpm;
+
+                // Perfect shift chance based on bot skill
+                const perfectShiftChance = this.skill; // e.g., skill 0.8 = 80% chance
+                const isWithinPerfectRange = lastRpmBeforeShift >= 8250 && this.lastRpmBeforeShift <= 8750
+
+                if (Math.random() < perfectShiftChance && isWithinPerfectRange) {
+                    this.speed *= 1.02; // same reward as player
+                }
+
+                // Normal gear transition
                 this.rpm *= 0.6;
                 this.acceleration *= 0.7;
-                this.nextShiftRPM = this.getRandomShiftRPM(); // pick next target rpm
+                this.nextShiftRPM = this.getRandomShiftRPM();
             }
         }
 
