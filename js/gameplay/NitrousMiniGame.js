@@ -10,7 +10,8 @@ export default class NitrousMiniGame {
         this.nitrousKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.instructionText = null;
         this.notificationText = null;
-        this.countdownText = null;  // New property for countdown
+        this.notificationBg = null;
+        this.countdownText = null;
         this.start();
     }
 
@@ -63,18 +64,18 @@ export default class NitrousMiniGame {
             .setOrigin(0.5)
             .setDepth(11)
             .setScrollFactor(0)
-            .setTint(0xffffff);  // White for visibility
+            .setTint(0xffffff);
 
         // Countdown timer (5 seconds)
         let timeLeft = 5;
         this.scene.time.addEvent({
             delay: 1000,
-            repeat: 4,  // 5 ticks (0-4)
+            repeat: 4,
             callback: () => {
                 timeLeft--;
                 if (this.countdownText && this.isActive) {
                     this.countdownText.setText(timeLeft.toString());
-                    if (timeLeft === 0) this.countdownText.setText('0');  // Ensure it shows 0 at end
+                    if (timeLeft === 0) this.countdownText.setText('0');
                 }
             },
             callbackScope: this
@@ -105,30 +106,69 @@ export default class NitrousMiniGame {
         if (this.greenZoneRect) this.greenZoneRect.destroy();
         if (this.bar) this.bar.destroy();
         if (this.instructionText) this.instructionText.destroy();
-        if (this.countdownText) this.countdownText.destroy();  // Destroy countdown text
+        if (this.countdownText) this.countdownText.destroy();
         if (this.notificationText) this.notificationText?.destroy();
+        if (this.notificationBg) this.notificationBg?.destroy();
 
-        // Notification text with custom bitmap font (fixed to screen)
-        let message = isSuccess ? 'NITROUS ACTIVATION SUCCESSFUL!' : this.timeout?.getProgress() === 1 ? 'NITROUS ACTIVATION FAILED!' : 'Failed!';
-        this.notificationText = this.scene.add.bitmapText(this.scene.scale.width / 2, this.scene.scale.height / 2 - 100, 'pixelFont', message, 28)
-            .setOrigin(0.5)
-            .setDepth(11)
+        // Styled notification with background
+        const message = isSuccess ? 'NITROUS ACTIVATED!' : 'NITROUS ACTIVATION FAILED!';
+        const tint = isSuccess ? 0x00ff00 : 0xff0000;
+        const notificationX = 640; // Center of screen
+        const notificationY = 200; // Top-center area
+        
+        // Create semi-transparent background box
+        const padding = 20;
+        const tempText = this.scene.add.bitmapText(0, 0, 'pixelFont', message, 32);
+        const textWidth = tempText.width;
+        const textHeight = tempText.height;
+        tempText.destroy();
+
+        this.notificationBg = this.scene.add.graphics()
             .setScrollFactor(0)
-            .setTint(isSuccess ? 0x00ff00 : 0xff0000)
+            .setDepth(11)
             .setAlpha(0);
 
+        this.notificationBg.fillStyle(0x000000, 0.7);
+        this.notificationBg.fillRoundedRect(
+            notificationX - (textWidth / 2) - padding,
+            notificationY - (textHeight / 2) - padding,
+            textWidth + (padding * 2),
+            textHeight + (padding * 2),
+            10
+        );
+
+        // Add border/outline to background
+        this.notificationBg.lineStyle(3, tint, 0.8);
+        this.notificationBg.strokeRoundedRect(
+            notificationX - (textWidth / 2) - padding,
+            notificationY - (textHeight / 2) - padding,
+            textWidth + (padding * 2),
+            textHeight + (padding * 2),
+            10
+        );
+
+        // Create notification text
+        this.notificationText = this.scene.add.bitmapText(notificationX, notificationY, 'pixelFont', message, 32)
+            .setOrigin(0.5)
+            .setDepth(12)
+            .setScrollFactor(0)
+            .setTint(tint)
+            .setAlpha(0);
+
+        // Tween both background and text together
         this.scene.tweens.add({
-            targets: this.notificationText,
+            targets: [this.notificationText, this.notificationBg],
             alpha: 1,
             duration: 300,
             onComplete: () => {
                 this.scene.tweens.add({
-                    targets: this.notificationText,
+                    targets: [this.notificationText, this.notificationBg],
                     alpha: 0,
                     duration: 1000,
-                    delay: 1000,
+                    delay: 1500,
                     onComplete: () => {
                         if (this.notificationText) this.notificationText.destroy();
+                        if (this.notificationBg) this.notificationBg.destroy();
                     }
                 });
             }
