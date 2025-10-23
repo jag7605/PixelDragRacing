@@ -318,9 +318,6 @@ export default class GarageScene extends Phaser.Scene {
                     if (!car.bodies.some(body => body.key === this.bodyChoice)) {
                         this.bodyChoice = car.bodies[0].key; // fallback to first body
                     }
-                    if (this.CarChoice == 'porsche') {
-                        car.wheelScale = 0.6;
-                    }
                     this.registry.set('selectedCarData', {
                         body: this.bodyChoice,
                         wheels: this.wheelChoice || 'wheels',
