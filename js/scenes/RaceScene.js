@@ -149,7 +149,8 @@ export default class RaceScene extends Phaser.Scene {
         this.resetRace();   // safe now, because cars exist
 
         // === Track length (in px) ===
-        this.trackLength = 3000;
+        this.trackLength = this.registry.get('trackLength') || 3000;
+        console.log("Track Length Loaded:", this.trackLength);
 
         // === Backgrounds ===
         const mode = this.registry.get('raceMode') || 'day'; // fallback if not set
@@ -165,11 +166,6 @@ export default class RaceScene extends Phaser.Scene {
             .setScale(0.9)
             .setOrigin(0, 0)
             .setVisible(false);
-
-
-
-
-        
 
         // === HUD ===
         this.hudText = this.add.text(20, 20, '', {
