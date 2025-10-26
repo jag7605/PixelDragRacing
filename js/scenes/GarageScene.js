@@ -1,5 +1,7 @@
 import { savePlayerDataFromScene } from '../utils/playerData.js';
 import NitrousTuner from '../gameplay/NitrousTuner.js';
+import ModeSelection from '../ui/ModeSelection.js';
+
 export default class GarageScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GarageScene' });
@@ -318,9 +320,6 @@ export default class GarageScene extends Phaser.Scene {
                     if (!car.bodies.some(body => body.key === this.bodyChoice)) {
                         this.bodyChoice = car.bodies[0].key; // fallback to first body
                     }
-                    if (this.CarChoice == 'porsche') {
-                        car.wheelScale = 0.6;
-                    }
                     this.registry.set('selectedCarData', {
                         body: this.bodyChoice,
                         wheels: this.wheelChoice || 'wheels',
@@ -534,109 +533,41 @@ export default class GarageScene extends Phaser.Scene {
                 this.startButton.on('pointerout', () => this.startButton.clearTint());
                 this.startButton.on('pointerdown', () => {
                     if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+
+                    if (this.startButton) {
+                        this.startButton.disableInteractive();
+                        this.startButton.destroy();
+                        this.startButton = null;
+                    }
+                    if (this.checkMark) {
+                        this.checkMark.destroy();
+                        this.checkMark = null;
+                    }
+
                     this.registry.set('selectedCarData', {
                         body: this.bodyChoice,
                         wheels: this.wheelChoice || 'wheels',
                         type: this.CarChoice,
                         stage: playerData.unlockedCars[this.CarChoice] || 1
                     });
-                    this.showModeSelection();
+
+                    ModeSelection.showModeSelection(this, (mode) => {
+                        this.registry.set('raceMode', mode);
+
+                        ModeSelection.showDifficultySelection(this, (botSkill) => {
+                            this.registry.set('botSkill', botSkill);
+
+                            ModeSelection.showTrackLengthSelection(this, (trackLength) => {
+                                this.registry.set('trackLength', trackLength);
+
+                                this.scene.start('RaceScene');
+                            });
+                        });
+                    });
                 });
                 this.add.bitmapText(1150, 670, 'pixelFont', 'START GAME', 20).setOrigin(0.5);
             }
         }
     } // End of showStart(car)
 
-    // day night mode selection
-    showModeSelection() {
-        const overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6);
-        const box = this.add.rectangle(640, 360, 400, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
-
-        const title = this.add.bitmapText(640, 280, 'pixelFont', 'SELECT MODE', 30)
-            .setTint(0x990000)
-            .setOrigin(0.5);
-
-        const dayBtn = this.add.image(550, 360, 'dayIcon').setInteractive().setScale(0.4);
-        const nightBtn = this.add.image(730, 360, 'nightIcon').setInteractive().setScale(0.5);
-
-        const dayLabel = this.add.bitmapText(550, 420, 'pixelFont', 'DAY', 18).setTint(0xFFA500).setOrigin(0.5);
-        const nightLabel = this.add.bitmapText(730, 420, 'pixelFont', 'NIGHT', 18).setTint(0x000066).setOrigin(0.5);
-
-        dayBtn.on('pointerover', () => dayBtn.setTint(0xFFD580));
-        dayBtn.on('pointerout', () => dayBtn.clearTint());
-        nightBtn.on('pointerover', () => nightBtn.setTint(0xFF5555));
-        nightBtn.on('pointerout', () => nightBtn.clearTint());
-
-        const cleanup = () => {
-            overlay.destroy();
-            box.destroy();
-            dayBtn.destroy();
-            nightBtn.destroy();
-            title.destroy();
-            dayLabel.destroy();
-            nightLabel.destroy();
-        };
-
-        dayBtn.on('pointerdown', () => {
-            this.registry.set('raceMode', 'day');
-            cleanup();
-            this.showDifficultySelection(); // go to difficulty step
-        });
-
-        nightBtn.on('pointerdown', () => {
-            this.registry.set('raceMode', 'night');
-            cleanup();
-            this.showDifficultySelection(); // go to difficulty step
-        });
-    }
-
-    // Difficulty selection
-    showDifficultySelection() {
-        const overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6);
-        const box = this.add.rectangle(640, 360, 400, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
-
-        const title = this.add.bitmapText(640, 280, 'pixelFont', 'SELECT DIFFICULTY', 28)
-            .setTint(0x3333aa)
-            .setOrigin(0.5);
-
-        const easyBtn = this.add.bitmapText(540, 350, 'pixelFont', 'EASY', 25)
-            .setTint(0x00ff00)
-            .setOrigin(0.5)
-            .setInteractive();
-        const normalBtn = this.add.bitmapText(640, 400, 'pixelFont', 'NORMAL', 25)
-            .setTint(0xffff00)
-            .setOrigin(0.5)
-            .setInteractive();
-        const hardBtn = this.add.bitmapText(740, 450, 'pixelFont', 'HARD', 25)
-            .setTint(0xff0000)
-            .setOrigin(0.5)
-            .setInteractive();
-
-        const cleanup = () => {
-            overlay.destroy();
-            box.destroy();
-            title.destroy();
-            easyBtn.destroy();
-            normalBtn.destroy();
-            hardBtn.destroy();
-        };
-
-        easyBtn.on('pointerdown', () => {
-            this.registry.set('botSkill', 0.4);
-            cleanup();
-            this.scene.start('RaceScene');
-        });
-
-        normalBtn.on('pointerdown', () => {
-            this.registry.set('botSkill', 0.7);
-            cleanup();
-            this.scene.start('RaceScene');
-        });
-
-        hardBtn.on('pointerdown', () => {
-            this.registry.set('botSkill', 0.95);
-            cleanup();
-            this.scene.start('RaceScene');
-        });
-    }
 }

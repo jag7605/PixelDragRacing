@@ -1,5 +1,6 @@
 import Car from '../gameplay/Car.js';
 import Bot from '../gameplay/Bot.js';
+import PerfectStart from '../gameplay/PerfectStart.js';
 import { savePlayerDataFromScene } from '../utils/playerData.js';
 import { resizeCar } from '../utils/resize.js';
 
@@ -9,6 +10,7 @@ export default class RaceScene extends Phaser.Scene {
     }
 
     startCountdown() {
+        this.perfectStart.startCountdown();
         let count = 3;
         let countdownText = this.add.text(400, 300, count - 1, {
             fontSize: "80px",
@@ -32,6 +34,7 @@ export default class RaceScene extends Phaser.Scene {
                     countdownText.setText(count);
                     count--;
                 } else {
+                    this.perfectStart.setGoTime(this.time.now); // Notify PerfectStart system that "GO!" has occurred
                     countdownText.setText("GO!");  // Change text to "GO!"
                     goBeep.play();
 
@@ -83,6 +86,15 @@ export default class RaceScene extends Phaser.Scene {
         // bot skill selection
         const botSkill = this.registry.get('botSkill') || 0.7; // fallback to Normal if not set
         this.botCar = new Bot(this, 150, 310, botSkill);
+
+        // === Cars ===
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.shiftUpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+        this.shiftDownKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+        this.nitrousKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        // Perfect Start system
+        this.perfectStart = new PerfectStart(this, this.playerCar, this.cursors);
 
         // Helper: ensure an animation exists for a given spritesheet key
         const makeDriveAnim = (key, fps = 24) => {
@@ -137,7 +149,8 @@ export default class RaceScene extends Phaser.Scene {
         this.resetRace();   // safe now, because cars exist
 
         // === Track length (in px) ===
-        this.trackLength = 3000;
+        this.trackLength = this.registry.get('trackLength') || 3000;
+        console.log("Track Length Loaded:", this.trackLength);
 
         // === Backgrounds ===
         const mode = this.registry.get('raceMode') || 'day'; // fallback if not set
@@ -153,15 +166,6 @@ export default class RaceScene extends Phaser.Scene {
             .setScale(0.9)
             .setOrigin(0, 0)
             .setVisible(false);
-
-
-
-
-        // === Cars ===
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.shiftUpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
-        this.shiftDownKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
-        this.nitrousKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // === HUD ===
         this.hudText = this.add.text(20, 20, '', {
@@ -436,6 +440,8 @@ export default class RaceScene extends Phaser.Scene {
 
         if (this.isPaused) return; // skip update if paused
 
+        this.perfectStart.update(); // update Perfect Start system
+
         // === Update car positions based on distance ===
         this.playerCar.bodySprite.x = 150 + this.playerCar.distance;
         this.playerCar.wheelSprite.x = 150 + this.playerCar.distance;
@@ -621,6 +627,8 @@ export default class RaceScene extends Phaser.Scene {
             this.dnfTimer.remove();
             this.dnfTimer = null;
         }
+
+        this.perfectStart.reset();
     }
 
     dnfCountdown() {

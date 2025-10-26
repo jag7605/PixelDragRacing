@@ -33,6 +33,9 @@ export default class Car {
         this.shiftCount = 0; // Count of gear shifts made
         this.perfectShifts = 0; // Count of perfect gear shifts made
         this.lastRpmBeforeShift = 0; // Temporary storage for RPM before shift (used for tracking perfect shifts)
+
+        this.shiftNotification = null; // Notification for gear shifts
+        this.shiftNotificationBg = null; // Background for shift notification
     }
 
     playSfx(key, cfg = {}) {
@@ -84,6 +87,7 @@ export default class Car {
                     this.perfectShifts++; // Increase perfect shift count
                     // Add small speed boost for perfect shift
                     this.speed *= 1.02; // 2% speed boost for perfect shift
+                    this.showPerfectShiftNotification(); // Show perfect shift notification
                 }
                 this.rpm *= 0.6; // Drop RPM on upshift (going to a higher gear means lower RPM)
                 this.acceleration *= 0.7; // Reduce acceleration curve after upshift
@@ -324,6 +328,79 @@ export default class Car {
         return percentage.toFixed(2); // Format to 2 decimal places
     }
 
+    showPerfectShiftNotification() { // Display perfect shift notification on screen
+        // Destroy existing notification if any
+        if (this.shiftNotification) this.shiftNotification.destroy();
+        if (this.shiftNotificationBg) this.shiftNotificationBg.destroy();
+    
+        const text = 'PERFECT SHIFT!';
+        const tint = 0x00ff00; // Green color
+        
+        // Position: between middle and right corner, near bottom
+        const notificationX = 1070;
+        const notificationY = 675;
+        
+        // Create semi-transparent background box
+        const padding = 15;
+        const tempText = this.scene.add.bitmapText(0, 0, 'pixelFont', text, 24);
+        const textWidth = tempText.width;
+        const textHeight = tempText.height;
+        tempText.destroy();
+    
+        this.shiftNotificationBg = this.scene.add.graphics() // Background box
+            .setScrollFactor(0)
+            .setDepth(19)
+            .setAlpha(0);
+    
+        this.shiftNotificationBg.fillStyle(0x000000, 0.7);
+        this.shiftNotificationBg.fillRoundedRect(
+            notificationX - (textWidth / 2) - padding,
+            notificationY - (textHeight / 2) - padding,
+            textWidth + (padding * 2),
+            textHeight + (padding * 2),
+            8
+        );
+    
+        // Add border/outline to background
+        this.shiftNotificationBg.lineStyle(2, tint, 0.8);
+        this.shiftNotificationBg.strokeRoundedRect(
+            notificationX - (textWidth / 2) - padding,
+            notificationY - (textHeight / 2) - padding,
+            textWidth + (padding * 2),
+            textHeight + (padding * 2),
+            8
+        );
+    
+        // Create text
+        this.shiftNotification = this.scene.add.bitmapText(notificationX, notificationY, 'pixelFont', text, 24)
+            .setOrigin(0.5)
+            .setDepth(20)
+            .setTint(tint)
+            .setAlpha(0)
+            .setScrollFactor(0);
+    
+        // Tween both background and text together (shorter duration for shift notification)
+        this.scene.tweens.add({
+            targets: [this.shiftNotification, this.shiftNotificationBg],
+            alpha: 1,
+            duration: 200,
+            onComplete: () => {
+                this.scene.tweens.add({
+                    targets: [this.shiftNotification, this.shiftNotificationBg],
+                    alpha: 0,
+                    duration: 500,
+                    delay: 800,
+                    onComplete: () => {
+                        if (this.shiftNotification) this.shiftNotification.destroy();
+                        if (this.shiftNotificationBg) this.shiftNotificationBg.destroy();
+                        this.shiftNotification = null;
+                        this.shiftNotificationBg = null;
+                    }
+                });
+            }
+        });
+    }
+
     // method to reset car properties on race restart
     reset(x, y) {
         this.speed = 0; // reset speed to 0
@@ -342,5 +419,9 @@ export default class Car {
         this.upgradeStage = this.scene.registry.get('upgrades')[this.scene.registry.get('selectedCar')] || 1;  // Reload if needed
         this.bodySprite.setPosition(x, y);
         this.wheelSprite.setPosition(x, y);
+        if (this.shiftNotification) this.shiftNotification.destroy(); // destroy existing notification if any
+        if (this.shiftNotificationBg) this.shiftNotificationBg.destroy(); // destroy existing background if any
+        this.shiftNotification = null; // reset notification
+        this.shiftNotificationBg = null;// reset background
     }
 }
