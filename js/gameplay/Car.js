@@ -35,6 +35,14 @@ export default class Car {
         this.lastRpmBeforeShift = 0; // Temporary storage for RPM before shift (used for tracking perfect shifts)
     }
 
+    playSfx(key, cfg = {}) {
+        if (this.scene.registry.get('sfxMuted')) return;
+        if (!this.scene.cache.audio.exists(key)) return; // prevents crash if key missing
+        const s = this.scene.sound.add(key, { volume: 0.7, ...cfg });
+        s.once('complete', () => s.destroy());
+        s.play();
+        }
+
     create() {
         const carData = this.scene.registry.get('selectedCarData') || { body: 'gt40', wheels: 'wheels' };
 
@@ -69,6 +77,8 @@ export default class Car {
             this.lastRpmBeforeShift = this.rpm; // Store RPM before shift
             if (this.gearSystem.shiftUp()) { // shift into the next gear
                 this.shiftCount++; // Increase the shift count
+                //gear shift sfx
+                this.playSfx('sfx_gear_shift', { rate: 1.0, volume: 5});
                 // Check for perfect shift (within 8250-8750 RPM before shift)
                 if (this.lastRpmBeforeShift >= 8250 && this.lastRpmBeforeShift <= 8750) {
                     this.perfectShifts++; // Increase perfect shift count
@@ -82,6 +92,7 @@ export default class Car {
         if (Phaser.Input.Keyboard.JustDown(shiftDownKey)) { // if the shift down key is pressed,
             if (this.gearSystem.shiftDown()) { // shift into the previous gear
                 this.shiftCount++; // Increase the shift count
+                this.playSfx('sfx_gear_shift', { rate: 0.9, volume: 5}); // sfx for downshift
                 this.rpm *= 1.7; // Increase RPM on downshift (going to a lower gear means higher RPM)
                 if (this.rpm > this.maxRPM) this.rpm = this.maxRPM; // This is to make sure that the RPM does not go past the maximum after downshifting
                 this.acceleration *= 1.2; // Increase acceleration curve after downshift

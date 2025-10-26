@@ -99,6 +99,11 @@ export default class BootScene extends Phaser.Scene {
     this.load.audio('bgMusic3', 'assets/sound/bgMusic3.mp3');
     this.load.audio('redBeep', 'assets/sound/RedBeep.mp3');
     this.load.audio('goBeep', 'assets/sound/GoBeep.mp3');
+   
+    //Racing sfx
+    this.load.audio('sfx_accelerate', 'assets/sound/sfx_accelerate.mp3');
+    this.load.audio('sfx_gear_shift', 'assets/sound/sfx_gear_shift.mp3');
+    this.load.audio('sfx_nitrous', 'assets/sound/sfx_nitrous.mp3');
 
     // Speedometer/Gauges
     this.load.image('rpmDial', 'assets/Speedometer/RPM.png');
