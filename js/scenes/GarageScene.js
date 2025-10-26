@@ -1,5 +1,6 @@
 import { savePlayerDataFromScene } from '../utils/playerData.js';
 import NitrousTuner from '../gameplay/NitrousTuner.js';
+import ModeSelection from '../ui/ModeSelection.js';
 export default class GarageScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GarageScene' });
@@ -452,40 +453,49 @@ export default class GarageScene extends Phaser.Scene {
 
     showStart(car) {
         let playerData = this.registry.get("playerData");
-        if (this.checkMark) this.checkMark.destroy();
+            if (this.checkMark) this.checkMark.destroy();
 
-        let selectedData = this.registry.get('selectedCarData') || {};
-        let selectedBody = selectedData.body || this.registry.get('selectedBody');
-        let selectedWheels = selectedData.wheels || this.registry.get('selectedWheels');
-        let selectedCarKey = this.registry.get('selectedCar');
+            let selectedData = this.registry.get('selectedCarData') || {};
+            let selectedBody = selectedData.body || this.registry.get('selectedBody');
+            let selectedWheels = selectedData.wheels || this.registry.get('selectedWheels');
+            let selectedCarKey = this.registry.get('selectedCar');
 
-        let carBody = this.bodyChoice || (car.selectedBody || (car.bodies && car.bodies[0].key));
-        let carWheels = this.wheelChoice || 'wheels';
+            let carBody = this.bodyChoice || (car.selectedBody || (car.bodies && car.bodies[0].key));
+            let carWheels = this.wheelChoice || 'wheels';
 
-        if (car.key === selectedData.type && car.selectedBody === selectedData.body && car.selectedWheels === selectedData.wheels) {
-            this.checkMark = this.add.image(1220, 500, 'check').setScale(0.3);
+            if (car.key === selectedData.type && car.selectedBody === selectedData.body && car.selectedWheels === selectedData.wheels) {
+                this.checkMark = this.add.image(1220, 500, 'check').setScale(0.3);
 
-            this.cars.forEach(c => c.colourBox.setVisible(false)); // hide all 
-            car.colourBox.setVisible(true); // show selected
+                this.cars.forEach(c => c.colourBox.setVisible(false)); // hide all 
+                car.colourBox.setVisible(true); // show selected
 
-            // Add start button if not present
-            if (!this.startButton) {
-                this.startButton = this.add.image(1150, 610, 'btn_start').setInteractive().setScale(0.4);
-                this.startButton.on('pointerover', () => this.startButton.setTint(0x888888));
-                this.startButton.on('pointerout', () => this.startButton.clearTint());
-                this.startButton.on('pointerdown', () => {
-                    if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
-                    this.registry.set('selectedCarData', {
-                        body: this.bodyChoice,
-                        wheels: this.wheelChoice || 'wheels',
-                        type: this.CarChoice,
-                        stage: playerData.unlockedCars[this.CarChoice] || 1
+                // Add start button if not present
+                if (!this.startButton) {
+                    this.startButton = this.add.image(1150, 610, 'btn_start').setInteractive().setScale(0.4);
+                    this.startButton.on('pointerover', () => this.startButton.setTint(0x888888));
+                    this.startButton.on('pointerout', () => this.startButton.clearTint());
+                    this.startButton.on('pointerdown', () => {
+                        if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+                        this.registry.set('selectedCarData', {
+                            body: this.bodyChoice,
+                            wheels: this.wheelChoice || 'wheels',
+                            type: this.CarChoice,
+                            stage: playerData.unlockedCars[this.CarChoice] || 1
+                        });
+                        ModeSelection.showModeSelection(this, (mode) => {
+                            this.registry.set('raceMode', mode);
+                            //difficulty
+                            ModeSelection.showDifficultySelection(this, (botSkill) => {
+                                this.registry.set('botSkill', botSkill);
+                                //track length
+                                ModeSelection.showTrackLengthSelection(this, (trackLength) => {
+                                    this.registry.set('trackLength', trackLength);
+                                    this.scene.start('RaceScene'); // Ensure this line is included
+                                });
+                            });
+                        });
                     });
-                    this.showModeSelection();
-                });
-                this.add.bitmapText(1150, 670, 'pixelFont', 'START GAME', 20).setOrigin(0.5);
+                }
             }
-        }
-    } // End of showStart(car)
-
+        } // End of showStart(car)
 }
