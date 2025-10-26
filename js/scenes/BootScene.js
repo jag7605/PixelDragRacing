@@ -105,6 +105,7 @@ export default class BootScene extends Phaser.Scene {
     this.load.audio('sfx_gear_shift', 'assets/sound/sfx_gear_shift.mp3');
     this.load.audio('sfx_nitrous', 'assets/sound/sfx_nitrous.mp3');
     this.load.audio('sfx_perfect_shift', 'assets/sound/sfx_perfect_shift.mp3'); 
+    this.load.audio('sfx_idle', 'assets/sound/sfx_idle.mp3');
 
 
     // Speedometer/Gauges

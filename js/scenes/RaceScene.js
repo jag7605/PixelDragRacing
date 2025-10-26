@@ -179,6 +179,27 @@ export default class RaceScene extends Phaser.Scene {
         this.pauseStartTime = 0;
         this.startCountdown();
 
+        //engine sfx
+        this.engineIdle  = this.sound.add('sfx_idle',       { loop: true, volume: 0.4 });
+        this.engineAccel = this.sound.add('sfx_accelerate', { loop: true, volume: 0.0 });
+
+        //start the loops if not muted
+        if (!this.registry.get('sfxMuted')) {
+        this.engineIdle.play();
+        this.engineAccel.play();
+        }
+
+        //keep audio sane across scene lifecycle
+        this.events.on('pause',  () => { this.engineIdle?.pause();  this.engineAccel?.pause();  });
+        this.events.on('resume', () => {
+        if (this.registry.get('sfxMuted')) return;
+        this.engineIdle?.resume(); this.engineAccel?.resume();
+        });
+        this.events.on('shutdown', () => {
+        this.engineIdle?.stop(); this.engineAccel?.stop();
+        this.engineIdle?.destroy(); this.engineAccel?.destroy();
+        });
+
         // === Pause button ===
         this.pauseButton = this.add.image(1230, 50, 'pauseButton')
             .setInteractive()
@@ -460,6 +481,16 @@ export default class RaceScene extends Phaser.Scene {
         // === Update cars ===
         this.playerCar.update(delta, this.cursors, this.shiftUpKey, this.shiftDownKey, this.nitrousKey,
             (time - this.startTime - this.totalPausedTime) / 1000);
+
+        //correct engine sfx plays according to action
+        if (this.engineIdle && this.engineAccel) {
+        const accelerating = this.playerCar.isAccelerating && this.playerCar.gearSystem.currentGear > 0;
+
+        // hard switch (clean & minimal)
+        this.engineIdle.setVolume(accelerating ? 0.0 : 0.4);
+        this.engineAccel.setVolume(accelerating ? 0.6 : 0.0);
+        }
+
         this.botCar.update(delta, time);
 
         let pxPerFrame = (this.playerCar.speed / 50) * (delta / 16.67); // tweak divisor for intensity
@@ -539,6 +570,8 @@ export default class RaceScene extends Phaser.Scene {
     raceOver() {
         if (this.raceEnded) return;
         this.raceEnded = true;
+        // stop update() from running the audio mixer, car logic, etc.
+        this.raceStarted = false;   
         let playerData = this.registry.get("playerData");
 
         //check who won and calculate stats/money
