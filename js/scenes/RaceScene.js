@@ -76,16 +76,28 @@ export default class RaceScene extends Phaser.Scene {
         const carData = this.registry.get('selectedCarData') || { body: 'gt40', wheels: 'wheels', wheelScale: 1 };
         const upgrades = this.registry.get('upgrades');
         const upgradeStage = upgrades[carData.type];
+        console.log(this.textures.list);
+
+        const carDataArray = this.registry.get('cars');
+        const wheelsArray = this.registry.get('wheels');
+
+        //select random bot car body
+        const botCarData = carDataArray[Phaser.Math.Between(0, carDataArray.length - 1)];
+
+        const randomBody = Phaser.Utils.Array.GetRandom(botCarData.bodies);
+
+        //select random wheels for bot
+        const botWheels = wheelsArray[Phaser.Math.Between(0, wheelsArray.length - 1)];
 
         const groundY = 490; // Y coordinate of the road/ground
         const desiredHeight = 120; // all cars will be this tall
-
 
         this.playerCar = new Car(this, 150, 410, upgradeStage);
         this.playerCar.create();
         // bot skill selection
         const botSkill = this.registry.get('botSkill') || 0.7; // fallback to Normal if not set
         this.botCar = new Bot(this, 150, 310, botSkill);
+        this.botCar.create();
 
         // === Cars ===
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -121,8 +133,11 @@ export default class RaceScene extends Phaser.Scene {
         const wheelAnimKey = makeDriveAnim(carData.wheels);
         if (wheelAnimKey) this.playerCar.wheelSprite.play(wheelAnimKey);
 
-        const botAnimKey = makeDriveAnim('beater_jeep');
-        if (botAnimKey) this.botCar.sprite.play(botAnimKey);
+        const botWheelAnimKey = makeDriveAnim(botWheels.key);
+        if (botWheelAnimKey) this.botCar.wheelSprite.play(wheelAnimKey);
+
+        const botBodyAnimKey = makeDriveAnim(randomBody.key);
+        if (botBodyAnimKey) this.botCar.bodySprite.play(wheelAnimKey);
 
         // Swap textures on already-created sprites from Car/Bot (no Car.js changes)
 
@@ -133,17 +148,33 @@ export default class RaceScene extends Phaser.Scene {
         this.playerCar.wheelSprite.setTexture(carData.wheels);
         this.playerCar.wheelSprite.play(wheelAnimKey);
 
-        this.botCar.sprite.setTexture('beater_jeep');
-        this.botCar.sprite.play(botAnimKey);
+        this.botCar.bodySprite.setTexture(randomBody.key);
+        this.botCar.bodySprite.play(botBodyAnimKey);
+
+        this.botCar.wheelSprite.setTexture(botWheels.key);
+        this.botCar.wheelSprite.play(botWheelAnimKey);
 
         resizeCar(this.playerCar.bodySprite, desiredHeight, groundY, 0, false);
         resizeCar(this.playerCar.wheelSprite, desiredHeight, groundY, this.registry.get('wheelScale'), false);
-        resizeCar(this.botCar.sprite, desiredHeight, groundY - 100, 0, false);
+        resizeCar(this.botCar.wheelSprite, desiredHeight, groundY - 100, botCarData.wheelScale - 0.2, false);
+        resizeCar(this.botCar.bodySprite, desiredHeight, groundY - 100, 0, false);
+
+        //set bot registry 
+        this.registry.set('botCarData', {
+            body: randomBody.key,
+            wheels: botWheels.key
+        });
 
         //if its a troll car, make wheels invisible
         if (carData.body === 'trollcar_white') {
             this.playerCar.wheelSprite.setVisible(false);
             resizeCar(this.playerCar.bodySprite, desiredHeight, groundY, 0, true); // make bigger
+        }
+
+        //troll car for bot
+        if (randomBody.key === 'trollcar_white') {
+            this.botCar.wheelSprite.setVisible(false);
+            resizeCar(this.botCar.bodySprite, desiredHeight, groundY - 100, 0, true); // make bigger
         }
 
         this.resetRace();   // safe now, because cars exist
@@ -437,7 +468,8 @@ export default class RaceScene extends Phaser.Scene {
         this.sky.setDepth(-1);
         this.road.setDepth(0);
         this.finishLine.setDepth(1);
-        this.botCar.sprite.setDepth(2);
+        this.botCar.bodySprite.setDepth(2);
+        this.botCar.wheelSprite.setDepth(2);
         this.playerCar.bodySprite.setDepth(2);
         this.playerCar.wheelSprite.setDepth(2);
         this.rpmDial.setDepth(3);
@@ -466,7 +498,8 @@ export default class RaceScene extends Phaser.Scene {
         // === Update car positions based on distance ===
         this.playerCar.bodySprite.x = 150 + this.playerCar.distance;
         this.playerCar.wheelSprite.x = 150 + this.playerCar.distance;
-        this.botCar.sprite.x = 150 + this.botCar.distance;
+        this.botCar.bodySprite.x = 150 + this.botCar.distance;
+        this.botCar.wheelSprite.x = 150 + this.botCar.distance;
 
         // Show and scroll finish line when player is near
         const distanceToFinish = this.finishLineX - (150 + this.playerCar.distance);
@@ -537,7 +570,7 @@ export default class RaceScene extends Phaser.Scene {
             this.playerCar.bodySprite.x + (this.playerCar.bodySprite.displayWidth * (1 - this.playerCar.bodySprite.originX));
 
         const botRightEdge =
-            this.botCar.sprite.x + (this.botCar.sprite.displayWidth * (1 - this.botCar.sprite.originX));
+            this.botCar.bodySprite.x + (this.botCar.bodySprite.displayWidth * (1 - this.botCar.bodySprite.originX));
 
         // Player crosses finish
         if (!this.playerCar.finishTime && playerRightEdge >= this.finishLine.x) {
@@ -628,6 +661,7 @@ export default class RaceScene extends Phaser.Scene {
 
         this.time.delayedCall(500, () => {
             this.scene.start("EndScene");
+            this.bgMusic.stop();
         });
     }
 
@@ -644,7 +678,8 @@ export default class RaceScene extends Phaser.Scene {
         this.botCar.distance = 0;
         this.playerCar.bodySprite.x = 150;
         this.playerCar.wheelSprite.x = 150;
-        this.botCar.sprite.x = 150;
+        this.botCar.bodySprite.x = 150;
+        this.botCar.wheelSprite.x = 150;
 
         this.registry.set('finalTime', 0);
         this.registry.set('topSpeed', 0);

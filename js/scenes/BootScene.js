@@ -185,6 +185,65 @@ export default class BootScene extends Phaser.Scene {
       this.registry.set('upgrades', upgrades);
   }
 
+  this.registry.set('cars', [
+      {
+          key: 'ferrari', scale: 1.8, wheelScale: 0.93, wheelX: 1, wheelY: -6, y: 80, cost: 0, level: 1, stage: 1, maxStage: 3, bodies: [
+              { key: 'ferrari_white', name: 'white', cost: 0 },
+              { key: 'ferrari_red', name: 'red', cost: 0 }
+          ],
+      },
+      {
+          key: 'gt40', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 0, y: 80, cost: 100, level: 1, stage: 1, maxStage: 3, bodies: [
+              { key: 'gt40_white', name: 'Classic', cost: 0 },
+              { key: 'gt40_black', name: 'Black', cost: 0 },
+              { key: 'gt40_blue', name: 'Blue', cost: 0 }
+          ],
+      },
+      {
+          key: 'golf', scale: 1.8, wheelScale: 1, wheelX: 0, wheelY: 2, y: 80, cost: 300, level: 2, stage: 1, maxStage: 3, bodies: [
+              { key: 'golf_white', name: 'Classic', cost: 0 },
+              { key: 'golf_green', name: 'Green', cost: 0 }
+          ],
+      },
+      {
+          key: 'porsche', scale: 1.8, wheelScale: 0.86, wheelX: 5, wheelY: 0, y: 80, cost: 500, level: 2, stage: 1, maxStage: 3, bodies: [
+              { key: 'porsche_red_white', name: 'Classic', cost: 0 },
+              { key: 'porsche_white', name: 'Black', cost: 0 }
+          ],
+      },
+      {
+          key: 'nissan', scale: 1.6, wheelScale: 0.92, wheelX: 2, wheelY: 10, y: 80, cost: 800, level: 3, stage: 1, maxStage: 3, bodies: [
+              { key: 'nissan_blue', name: 'grey', cost: 0 },
+              { key: 'nissan_white', name: 'yellow', cost: 0 }
+          ],
+      },
+      {
+          key: 'mustang', scale: 1.8, wheelScale: 0.93, wheelX: 3, wheelY: 0, y: 80, cost: 900, level: 3, stage: 1, maxStage: 3, bodies: [
+              { key: 'mustang_white', name: 'Classic', cost: 0 },
+              { key: 'mustang_black', name: 'Black', cost: 0 },
+              { key: 'mustang_blue', name: 'Blue', cost: 0 }
+          ],
+      },
+      {
+          key: 'lamborghini', scale: 1.8, wheelScale: 0.97, wheelX: 3.5, wheelY: 0, y: 80, cost: 1000, level: 4, stage: 1, maxStage: 3, bodies: [
+              { key: 'lamborghini_white', name: 'Classic', cost: 0 },
+              { key: 'lamborghini_yellow', name: 'yellow', cost: 0 }
+          ],
+      },
+      {
+          key: 'trollcar', scale: 0.8, y: 50, cost: 1500, level: 5, stage: 1, maxStage: 3, hasWheels: false, bodies: [
+              { key: 'trollcar_white', name: 'Troll', cost: 0 }
+          ]
+      },
+  ]);
+    this.registry.set('wheels', [
+          { key: 'wheels', scale: 1.6, y: 80, cost: 0, level: 1 },
+          { key: 'wheel1', scale: 1.6, y: 80, cost: 0, level: 1 },
+          { key: 'wheel2', scale: 1.6, y: 80, cost: 0, level: 1 },
+          { key: 'wheel3', scale: 1.6, y: 80, cost: 0, level: 1 },
+          { key: 'wheel4', scale: 1.6, y: 80, cost: 0, level: 1 },
+      ]
+  );
 
     this.load.once('complete', () => {
       //full size growth when it is finshed 

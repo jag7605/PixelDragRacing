@@ -3,7 +3,6 @@ import GearSystem from './GearSystem.js';
 export default class Bot {
     constructor(scene, x, y, skill = 0.7) {
         this.scene = scene;
-        this.sprite = scene.add.sprite(x, y, 'car').setScale(1);
 
         this.speed = 0;
         this.rpm = 800;
@@ -97,6 +96,12 @@ export default class Bot {
             this.zeroToHundredTime = elapsed;
         }
         this.distance += this.speed * (delta / 1000);
+    }
+    create() {
+        const botData = this.scene.registry.get('botCarData') || { body: 'gt40', wheels: 'wheels' };
+
+        this.bodySprite = this.scene.add.sprite(640, 360, botData.body);
+        this.wheelSprite = this.scene.add.sprite(640, 360, botData.wheels);
     }
 
     activateNitrous() {
