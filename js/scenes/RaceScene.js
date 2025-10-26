@@ -88,6 +88,7 @@ export default class RaceScene extends Phaser.Scene {
 
         //select random wheels for bot
         const botWheels = wheelsArray[Phaser.Math.Between(0, wheelsArray.length - 1)];
+    
 
         const groundY = 490; // Y coordinate of the road/ground
         const desiredHeight = 120; // all cars will be this tall
@@ -104,6 +105,9 @@ export default class RaceScene extends Phaser.Scene {
         this.shiftUpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
         this.shiftDownKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
         this.nitrousKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        this.n2Playing = false;  // nitrous sfx state
+        this.sfxNitrous = null;  // holder
 
         // Perfect Start system
         this.perfectStart = new PerfectStart(this, this.playerCar, this.cursors);
@@ -211,8 +215,15 @@ export default class RaceScene extends Phaser.Scene {
         this.startCountdown();
 
         //engine sfx
-        this.engineIdle  = this.sound.add('sfx_idle',       { loop: true, volume: 0.4 });
+        this.engineIdle  = this.sound.add('sfx_idle',       { loop: true, volume: 0.0 });
         this.engineAccel = this.sound.add('sfx_accelerate', { loop: true, volume: 0.0 });
+
+        // base gains (tweak these)
+        this.engineGain = {
+        idle: 0.9,   // was 0.4 — make idle louder
+        accel: 0.55  // was 0.6 — slightly lower so idle stands out more when not accelerating
+        };
+
 
         //start the loops if not muted
         if (!this.registry.get('sfxMuted')) {
@@ -230,6 +241,13 @@ export default class RaceScene extends Phaser.Scene {
         this.engineIdle?.stop(); this.engineAccel?.stop();
         this.engineIdle?.destroy(); this.engineAccel?.destroy();
         });
+
+        // nitrous cleanup
+        this.sfxNitrous?.stop();
+        this.sfxNitrous?.destroy();
+        this.sfxNitrous = null;
+        this.n2Playing = false;
+        this.sound.stopByKey('sfx_nitrous');   
 
         // === Pause button ===
         this.pauseButton = this.add.image(1230, 50, 'pauseButton')
@@ -489,6 +507,16 @@ export default class RaceScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+
+        //ENGINE MIXER: runs always, but accel only when raceStarted is true
+        if (this.engineIdle && this.engineAccel) {
+            const muted = !!this.registry.get('sfxMuted');
+            const accelerating = this.raceStarted && this.playerCar.isAccelerating && this.playerCar.gearSystem.currentGear > 0;
+
+            this.engineIdle.setVolume(muted ? 0 : (accelerating ? 0.0 : this.engineGain.idle));
+            this.engineAccel.setVolume(muted ? 0 : (accelerating ? this.engineGain.accel : 0.0));
+        }
+
         if (!this.raceStarted) return;
 
         if (this.isPaused) return; // skip update if paused
@@ -515,20 +543,25 @@ export default class RaceScene extends Phaser.Scene {
         this.playerCar.update(delta, this.cursors, this.shiftUpKey, this.shiftDownKey, this.nitrousKey,
             (time - this.startTime - this.totalPausedTime) / 1000);
 
-        //correct engine sfx plays according to action
-        if (this.engineIdle && this.engineAccel) {
-        const accelerating = this.playerCar.isAccelerating && this.playerCar.gearSystem.currentGear > 0;
-
-        // hard switch (clean & minimal)
-        this.engineIdle.setVolume(accelerating ? 0.0 : 0.4);
-        this.engineAccel.setVolume(accelerating ? 0.6 : 0.0);
-        }
-
         this.botCar.update(delta, time);
 
         let pxPerFrame = (this.playerCar.speed / 50) * (delta / 16.67); // tweak divisor for intensity
         this.road.tilePositionX += pxPerFrame * 3; // exaggerate by x3
         this.sky.tilePositionX += pxPerFrame * 0.5; // slower for parallax
+
+        // Nitrous SFX: start when active, stop when not
+        if (this.playerCar.nitrousActive && !this.n2Playing && !this.registry.get('sfxMuted')) {
+        this.sfxNitrous = this.sound.add('sfx_nitrous', { loop: true, volume: 0.7 });
+        this.sfxNitrous.play();
+        this.n2Playing = true;
+        } 
+        
+        else if (!this.playerCar.nitrousActive && this.n2Playing) {
+        this.sfxNitrous?.stop();
+        this.sfxNitrous?.destroy();
+        this.sfxNitrous = null;
+        this.n2Playing = false;
+        }
 
 
         // === HUD update ===
@@ -605,6 +638,15 @@ export default class RaceScene extends Phaser.Scene {
         this.raceEnded = true;
         // stop update() from running the audio mixer, car logic, etc.
         this.raceStarted = false;   
+
+        // --- stop nitrous sfx if still playing ---
+        this.sfxNitrous?.stop();
+        this.sfxNitrous?.destroy();
+        this.sfxNitrous = null;
+        this.n2Playing = false;
+        this.sound.stopByKey('sfx_nitrous'); 
+
+
         let playerData = this.registry.get("playerData");
 
         //check who won and calculate stats/money
@@ -660,8 +702,10 @@ export default class RaceScene extends Phaser.Scene {
         savePlayerDataFromScene(this);
 
         this.time.delayedCall(500, () => {
+            this.sound.stopByKey('sfx_nitrous'); 
+            this.bgMusic?.stop();
             this.scene.start("EndScene");
-            this.bgMusic.stop();
+            
         });
     }
 
