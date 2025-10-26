@@ -85,6 +85,9 @@ export default class Car {
                 // Check for perfect shift (within 8250-8750 RPM before shift)
                 if (this.lastRpmBeforeShift >= 8250 && this.lastRpmBeforeShift <= 8750) {
                     this.perfectShifts++; // Increase perfect shift count
+                    //perfect shift sfx
+                    this.playSfx('sfx_perfect_shift', { rate: 1.0,  volume: 5 });
+
                     // Add small speed boost for perfect shift
                     this.speed *= 1.02; // 2% speed boost for perfect shift
                     this.showPerfectShiftNotification(); // Show perfect shift notification
@@ -180,6 +183,10 @@ export default class Car {
                 if (isSuccess) {
                     this.nitrousActive = true;
                     this.nitrousCooldown = this.nitrousDuration + 5000;  // Existing cooldown
+                    
+                    //nitrous activated sound
+                    this.playSfx('sfx_nitrous', { rate: 1.0, volume: 3});
+
                     this.scene.time.delayedCall(this.nitrousDuration, () => {
                         this.nitrousActive = false;
                     });
