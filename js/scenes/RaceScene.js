@@ -5,8 +5,8 @@ import { savePlayerDataFromScene } from '../utils/playerData.js';
 import { resizeCar } from '../utils/resize.js';
 
 export default class RaceScene extends Phaser.Scene {
-    constructor() {
-        super('RaceScene');
+    constructor(key = 'RaceScene') {
+        super({key});
     }
 
     startCountdown() {
