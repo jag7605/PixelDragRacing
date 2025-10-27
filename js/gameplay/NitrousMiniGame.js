@@ -125,7 +125,7 @@ export default class NitrousMiniGame {
 
         this.notificationBg = this.scene.add.graphics()
             .setScrollFactor(0)
-            .setDepth(11)
+            .setDepth(8)
             .setAlpha(0);
 
         this.notificationBg.fillStyle(0x000000, 0.7);
@@ -150,7 +150,7 @@ export default class NitrousMiniGame {
         // Create notification text
         this.notificationText = this.scene.add.bitmapText(notificationX, notificationY, 'pixelFont', message, 32)
             .setOrigin(0.5)
-            .setDepth(12)
+            .setDepth(9)
             .setScrollFactor(0)
             .setTint(tint)
             .setAlpha(0);

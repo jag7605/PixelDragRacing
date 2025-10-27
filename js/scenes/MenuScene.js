@@ -72,6 +72,7 @@ export default class MenuScene extends Phaser.Scene {
                     //track length
                     ModeSelection.showTrackLengthSelection(this, (trackLength) => {
                         this.registry.set('trackLength', trackLength);
+                        this.registry.set('tutorialMode', false);
 
                         this.scene.start('RaceScene');
                     });
@@ -112,24 +113,41 @@ export default class MenuScene extends Phaser.Scene {
         this.moneyText = this.add.bitmapText(70, 32, 'pixelFont', `$${playerData.currency.toString()}`, 24).setOrigin(0, 0.5);
 
         //display level
-        this.levelText = this.add.bitmapText(90, 70, 'pixelFont', `Level: ${playerData.level}`, 20).setOrigin(0.5);
+         //display level
+        const levelText = this.add.bitmapText(15,  80, 'pixelFont', `Level ${playerData.level}`, 20).setOrigin(0, 0.5);
+
+        //display level progress bar
+        const barWidth = 200;
+        const barHeight = 20;
+        const barX = 15;
+        const barY = 110;
+
+        const progressBarBg = this.add.rectangle(barX, barY, barWidth, barHeight, 0x555555).setOrigin(0, 0.5);
+        const progressBarFill = this.add.rectangle(barX, barY, 0, barHeight, 0x068f06).setOrigin(0, 0.5);
+
+        const xpForNextLevel = Math.floor(100 * Math.pow(1.5, playerData.level - 1));
+        const xpProgress = Phaser.Math.Clamp(playerData.XP / xpForNextLevel, 0, 1);
+        progressBarFill.width = barWidth * xpProgress;
+
+        //display how much they have vs how much they need for next level
+        const xpText = this.add.bitmapText(barX + barWidth / 2, barY, 'pixelFont', `${playerData.XP} / ${xpForNextLevel} XP`, 14).setOrigin(0.5);
 
         //diplay username at top when logged in
         this.add.bitmapText(640, 32, 'pixelFont', `Hello, ${playerData.username}`, 24).setOrigin(0.5);
 
-        const levelButton = this.add.bitmapText(20, 110, 'pixelFont', 'add level', 10).setInteractive();
+        const levelButton = this.add.bitmapText(20, 130, 'pixelFont', 'add level', 10).setInteractive();
         levelButton.on('pointerover', () => levelButton.setTint(0x888888));
         levelButton.on('pointerout', () => levelButton.clearTint());
         levelButton.on('pointerdown', () => {
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
             playerData.level += 1;
-            this.levelText.destroy();
-            this.levelText = this.add.bitmapText(90, 70, 'pixelFont', `Level: ${playerData.level}`, 20).setOrigin(0.5);
             this.registry.set("playerData", playerData);
             savePlayerDataFromScene(this);
+            //reload scene to update level display
+            this.scene.restart();
         });
 
-        const moneyButton = this.add.bitmapText(20, 130, 'pixelFont', 'add money', 10).setInteractive();
+        const moneyButton = this.add.bitmapText(20, 150, 'pixelFont', 'add money', 10).setInteractive();
         moneyButton.on('pointerover', () => moneyButton.setTint(0x888888));
         moneyButton.on('pointerout', () => moneyButton.clearTint());
         moneyButton.on('pointerdown', () => {

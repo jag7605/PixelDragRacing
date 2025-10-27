@@ -1,3 +1,4 @@
+import { addWrappedTextArray } from '../utils/wordWrap.js';
 export default class TutorialCoach {
   constructor(scene, playerCar) {
     this.scene = scene;
@@ -8,7 +9,9 @@ export default class TutorialCoach {
       .setScrollFactor(0).setDepth(10).setInteractive();
 
     this.tooltip = this.makeTooltip();
+    this.tooltip.setDepth(11);
     this.arrow = this.makeArrow();
+    this.arrow.setDepth(11);
 
     //step machine
     this.stepIndex = 0;
@@ -114,14 +117,45 @@ export default class TutorialCoach {
 
   //UI bits
   makeTooltip() {
+    // Create background
     const bg = this.scene.add.rectangle(0, 0, 560, 90, 0x111111, 0.95)
-      .setScrollFactor(0).setDepth(11).setOrigin(0.5).setStrokeStyle(2, 0xffffff);
-    const txt = this.scene.add.text(0, 0, '', {
-      fontFamily: 'Arial', fontSize: '20px', color: '#ffffff', align: 'center', wordWrap: { width: 520 }
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
-    const container = this.scene.add.container(640, 240, [bg, txt]).setDepth(12);
+      .setScrollFactor(0)
+      .setDepth(11)
+      .setOrigin(0.5)
+      .setStrokeStyle(2, 0xffffff);
+
+    // Create container for text and background
+    const container = this.scene.add.container(640, 240, [bg]).setDepth(12);
     container.setScrollFactor(0);
-    container.txt = txt; container.bg = bg;
+    container.bg = bg;
+    container.textItems = [];
+
+    // Add a method to dynamically set wrapped text using your helper
+    container.setText = (text) => {
+      // Destroy any old text lines
+      container.textItems.forEach(t => t.destroy());
+      container.textItems = [];
+
+      const textContainer = this.scene.add.container(0, 0);
+      container.add(textContainer);
+      container.textItems.push(textContainer);
+
+      // Add wrapped lines using your helper
+      const yOffset = addWrappedTextArray(
+        this.scene,
+        textContainer,
+        0, // relative X inside container
+        10, // relative Y start (so text sits in middle of bg)
+        [text],
+        'pixelFont',
+        15, // font size
+        520, // max width
+        8 // line spacing
+      );
+
+      textContainer.y = -yOffset / 2; 
+    };
+
     return container;
   }
 
@@ -156,7 +190,7 @@ export default class TutorialCoach {
     const s = this.steps[i];
     if (!s) return;
     s.place?.();
-    this.tooltip.txt.setText(s.text);
+    this.tooltip.setText(s.text);
     this.freeze(!!s.freeze);
     s.start?.();
   }

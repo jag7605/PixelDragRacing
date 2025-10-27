@@ -1,7 +1,7 @@
 export default class ModeSelection {
     static showModeSelection(scene, onModeSelected) {
         const overlay = scene.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6);
-        const box = scene.add.rectangle(640, 360, 400, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
+        const box = scene.add.rectangle(640, 360, 450, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
 
         const title = scene.add.bitmapText(640, 280, 'pixelFont', 'SELECT MODE', 30)
             .setTint(0x990000)
@@ -41,9 +41,9 @@ export default class ModeSelection {
 
     static showDifficultySelection(scene, onDifficultySelected) {
         const overlay = scene.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6);
-        const box = scene.add.rectangle(640, 360, 400, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
+        const box = scene.add.rectangle(640, 360, 450, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
 
-        const title = scene.add.bitmapText(640, 280, 'pixelFont', 'SELECT DIFFICULTY', 28)
+        const title = scene.add.bitmapText(640, 280, 'pixelFont', 'SELECT DIFFICULTY', 25)
             .setTint(0x3333aa)
             .setOrigin(0.5);
 
@@ -85,9 +85,9 @@ export default class ModeSelection {
 
     static showTrackLengthSelection(scene, onLengthSelected) {
         const overlay = scene.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6);
-        const box = scene.add.rectangle(640, 360, 400, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
+        const box = scene.add.rectangle(640, 360, 450, 250, 0xffffff, 0.9).setStrokeStyle(4, 0x000000);
 
-        const title = scene.add.bitmapText(640, 280, 'pixelFont', 'SELECT TRACK LENGTH', 28)
+        const title = scene.add.bitmapText(640, 280, 'pixelFont', 'SELECT TRACK LENGTH', 23)
             .setTint(0x3333aa)
             .setOrigin(0.5);
 
