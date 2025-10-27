@@ -9,7 +9,7 @@ export default class TutorialRaceScene extends RaceScene {
   create() {
     //normal race setup
     super.create();
-
+    
     //tutorial tuning
     this.registry.set('tutorialMode', true);
     this.trackLength = 1800;                // shorter track

@@ -4,7 +4,14 @@ export default class EndScene extends Phaser.Scene {
     }
 
     create() {
-        const raceScene = this.scene.get('RaceScene');
+
+        // Which race scene did we come from?
+        const isTutorial = !!this.registry.get('tutorialMode');
+        const raceKey = isTutorial ? 'TutorialRaceScene' : 'RaceScene';
+
+        // May or may not be running now; that’s fine, guard accesses with ?.
+        let raceScene = null;
+        try { raceScene = this.scene.get(raceKey); } catch(e) {}
 
         //add black background
         this.cameras.main.setBackgroundColor('#000000');
@@ -100,8 +107,12 @@ export default class EndScene extends Phaser.Scene {
             // play sound effect only if not muted
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
 
-            if (raceScene.bgMusic) {
-                raceScene.bgMusic.stop();
+            // stop any lingering bg music defensively
+            raceScene?.bgMusic?.stop?.();
+            raceScene?.bgMusic?.destroy?.();
+            if (isTutorial) {
+            // clear tutorial freeze just in case
+            raceScene?.setTutorialFrozen?.(false);
             }
 
             this.cameras.main.fadeOut(500, 0, 0, 0);
@@ -139,8 +150,10 @@ export default class EndScene extends Phaser.Scene {
             // play sound effect only if not muted
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
 
-            if (raceScene.bgMusic) {
-                raceScene.bgMusic.stop();
+            raceScene?.bgMusic?.stop?.();
+            raceScene?.bgMusic?.destroy?.();
+            if (isTutorial) {
+            raceScene?.setTutorialFrozen?.(false);
             }
 
             this.cameras.main.fadeOut(500, 0, 0, 0);
@@ -150,5 +163,10 @@ export default class EndScene extends Phaser.Scene {
                 this.scene.stop();
             });
         });
+
+        if (isTutorial) {
+            restartContainer.setVisible(false).disableInteractive();
+            MenuContainer.x = 640; // optional
+        }
     }  
 }

@@ -12,6 +12,8 @@ export default class TutorialCoach {
 
     //step machine
     this.stepIndex = 0;
+    this.listeners = [];
+
     this.steps = [
       {
         id: 'intro',
@@ -35,6 +37,26 @@ export default class TutorialCoach {
         done: () => this.player.gearSystem.currentGear >= 2
       },
       {
+        id: 'brake',
+        text: 'Tap ▼ (DOWN) to Brake. Try it now!',
+        place: () => this.at(640, 520).pointAt(750, 620),
+        freeze: true,
+        start: () => {
+          this.listenOnce('keydown-DOWN', () => this.doneNow());
+        },
+        done: () => false
+      },
+      {
+        id: 'shiftDown',
+        text: 'Shift Down with "Q". Use it to control RPM!',
+        place: () => this.at(530, 520).pointAt(530, 620),
+        freeze: true,
+        start: () => {
+          this.listenOnce('keydown-Q', () => this.doneNow());
+        },
+        done: () => false
+      },
+      {
         id: 'nitrous',
         text: 'Hit SPACE to use Nitrous when straight and steady!',
         place: () => this.at(730, 520).pointAt(750, 620),
@@ -52,12 +74,42 @@ export default class TutorialCoach {
         id: 'outro',
         text: 'Tutorial complete! You can replay it anytime from the Menu.',
         place: () => this.at(640, 240),
-        start: () => {},
-        done: () => true
+        freeze: true, // freeze to let them read
+        start: () => {
+          // auto-unfreeze after a short moment if you want:
+          this.scene.time.delayedCall(800, () => this.doneNow());
+        },
+        done: () => false
       }
     ];
 
     this.enterStep(0);
+  }
+
+
+  // ---------- helpers for freezing & input ----------
+  freeze(on) {
+    this.scene.setTutorialFrozen(on);
+    this.blocker.setInteractive(on);
+  }
+
+  listenOnce(keyEvent, cb) {
+    const handler = () => { this.scene.input.keyboard.off(keyEvent, handler); cb(); };
+    this.scene.input.keyboard.on(keyEvent, handler);
+    this.listeners.push({ keyEvent, handler });
+  }
+
+  clearListeners() {
+    this.listeners.forEach(({ keyEvent, handler }) =>
+      this.scene.input.keyboard.off(keyEvent, handler)
+    );
+    this.listeners = [];
+  }
+
+  doneNow() {
+    // unfreeze and advance
+    this.freeze(false);
+    this.next();
   }
 
   //UI bits
@@ -105,6 +157,7 @@ export default class TutorialCoach {
     if (!s) return;
     s.place?.();
     this.tooltip.txt.setText(s.text);
+    this.freeze(!!s.freeze);
     s.start?.();
   }
 
@@ -125,6 +178,7 @@ export default class TutorialCoach {
   }
 
   destroy() {
+    this.clearListeners();
     this.blocker?.destroy();
     this.arrow?.destroy();
     this.tooltip?.destroy();

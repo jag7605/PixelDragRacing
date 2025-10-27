@@ -9,6 +9,18 @@ export default class RaceScene extends Phaser.Scene {
         super({key});
     }
 
+    //Tutorial freeze support
+    tutorialFrozen = false;
+
+    setTutorialFrozen(on) {
+    this.tutorialFrozen = !!on;
+    //hush engine loops while frozen
+    if (on) {
+        this.engineIdle?.setVolume(0);
+        this.engineAccel?.setVolume(0);
+    }
+}
+
     startCountdown() {
         this.perfectStart.startCountdown();
         let count = 3;
@@ -516,6 +528,9 @@ export default class RaceScene extends Phaser.Scene {
             this.engineIdle.setVolume(muted ? 0 : (accelerating ? 0.0 : this.engineGain.idle));
             this.engineAccel.setVolume(muted ? 0 : (accelerating ? this.engineGain.accel : 0.0));
         }
+
+        // stop world updates while tutorial is waiting for the player
+        if (this.tutorialFrozen) return;
 
         if (!this.raceStarted) return;
 
