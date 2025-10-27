@@ -42,7 +42,7 @@ export default class MenuScene extends Phaser.Scene {
         this.add.image(W / 2 + 340, 120, 'cloud').setScale(0.3);
         this.add.image(W / 2 - 300, 360, 'cloud').setScale(0.25);
 
-        const tutorialBtn = this.add.text(640, 520, 'Play Tutorial', {
+        const tutorialBtn = this.add.text(640, 500, 'Play Tutorial', {
         fontSize: '32px', color: '#fff', backgroundColor: '#333',
         padding: { left: 12, right: 12, top: 8, bottom: 8 }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -106,6 +106,12 @@ export default class MenuScene extends Phaser.Scene {
                 this.scene.launch('LoginScene');
             }
 
+        });
+
+        //stats button
+        ui.createButton(W - 180, 40, 'stats', null, 0.3, 0.35, () => {
+            this.scene.pause();
+            this.scene.launch('StatsScene');
         });
 
         //display money
