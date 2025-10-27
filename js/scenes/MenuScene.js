@@ -72,6 +72,7 @@ export default class MenuScene extends Phaser.Scene {
                     //track length
                     ModeSelection.showTrackLengthSelection(this, (trackLength) => {
                         this.registry.set('trackLength', trackLength);
+                        this.registry.set('tutorialMode', false);
 
                         this.scene.start('RaceScene');
                     });

@@ -490,6 +490,7 @@ export default class GarageScene extends Phaser.Scene {
                                 //track length
                                 ModeSelection.showTrackLengthSelection(this, (trackLength) => {
                                     this.registry.set('trackLength', trackLength);
+                                    this.registry.set('tutorialMode', false);
                                     this.scene.start('RaceScene'); // Ensure this line is included
                                 });
                             });
