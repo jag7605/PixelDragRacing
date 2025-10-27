@@ -614,14 +614,9 @@ export default class RaceScene extends Phaser.Scene {
 
         // === Finish line check ===
         //player crosses finish line
-        const playerRightEdge =
-            this.playerCar.bodySprite.x + (this.playerCar.bodySprite.displayWidth * (1 - this.playerCar.bodySprite.originX));
-
-        const botRightEdge =
-            this.botCar.bodySprite.x + (this.botCar.bodySprite.displayWidth * (1 - this.botCar.bodySprite.originX));
 
         // Player crosses finish
-        if (!this.playerCar.finishTime && playerRightEdge >= this.finishLine.x) {
+        if (!this.playerCar.finishTime && this.playerCar.bodySprite.x >= this.finishLine.x) {
             this.playerCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
             if (!this.botCar.finishTime) {
                 this.dnfCountdown();
@@ -632,7 +627,7 @@ export default class RaceScene extends Phaser.Scene {
         }
 
         // Bot crosses finish
-        if (!this.botCar.finishTime && botRightEdge >= this.finishLine.x) {
+        if (!this.botCar.finishTime && this.botCar.bodySprite.x >= this.finishLine.x) {
             this.botCar.finishTime = (time - this.startTime - this.totalPausedTime) / 1000;
             if (!this.playerCar.finishTime) {
                 this.dnfCountdown();
@@ -644,7 +639,10 @@ export default class RaceScene extends Phaser.Scene {
 
         //end game if both cars have finished
         if (this.playerCar.finishTime && this.botCar.finishTime) {
-            this.raceOver();
+            //delay
+            this.time.delayedCall(500, () => {
+                this.raceOver();
+            });
         }
     }
 
@@ -666,6 +664,7 @@ export default class RaceScene extends Phaser.Scene {
 
         //check who won and calculate stats/money
         let currencyEarned = 0;
+        playerData.stats.races += 1;
         if (this.botCar.finishTime !== 'DNF' && this.playerCar.finishTime !== 'DNF') {
             if (this.playerCar.finishTime < this.botCar.finishTime) {
                 this.registry.set('youWin', true);
@@ -716,12 +715,9 @@ export default class RaceScene extends Phaser.Scene {
         //save to localStorage
         savePlayerDataFromScene(this);
 
-        this.time.delayedCall(500, () => {
-            this.sound.stopByKey('sfx_nitrous'); 
-            this.bgMusic?.stop();
-            this.scene.start("EndScene");
-            
-        });
+        this.sound.stopByKey('sfx_nitrous'); 
+        this.bgMusic?.stop();
+        this.scene.start("EndScene");
     }
 
     resetRace() {

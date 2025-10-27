@@ -80,19 +80,19 @@ export default class ProfileScene extends Phaser.Scene {
         });
         
         //log out button
-        const loginButton = this.add.rectangle(640, 590, 200, 50, 0x852020).setOrigin(0.5).setStrokeStyle(2, 0x000000).setInteractive();
-        const loginButtonText = this.add.bitmapText(640, 590, 'pixelFont', 'LOG OUT', 24).setOrigin(0.5);
+        const logoutButton = this.add.rectangle(640, 590, 200, 50, 0x852020).setOrigin(0.5).setStrokeStyle(2, 0x000000).setInteractive();
+        const logoutButtonText = this.add.bitmapText(640, 590, 'pixelFont', 'LOG OUT', 24).setOrigin(0.5);
 
-        loginButton.on('pointerover', () => {
-            loginButton.setFillStyle(0xc27070);
+        logoutButton.on('pointerover', () => {
+            logoutButton.setFillStyle(0xc27070);
         });
-        loginButton.on('pointerout', () => {
-            loginButton.setFillStyle(0x852020);
+        logoutButton.on('pointerout', () => {
+            logoutButton.setFillStyle(0x852020);
         });
 
         const errorText = this.add.bitmapText(640, 480, 'pixelFont', '', 12).setOrigin(0.5).setTint(0x852020);
 
-        loginButton.on('pointerdown', () => {
+        logoutButton.on('pointerdown', () => {
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
             playerData = {
                 username: "Guest",

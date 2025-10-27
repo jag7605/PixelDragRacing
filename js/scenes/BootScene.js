@@ -89,6 +89,7 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('select', 'assets/ui/buttonImages/select.png');
     this.load.image('dayIcon', 'assets/ui/buttonImages/Sun.webp');
     this.load.image('nightIcon', 'assets/ui/buttonImages/Moon.webp');
+    this.load.image('stats', 'assets/ui/buttonImages/stats.png');
 
 
     // Sounds
