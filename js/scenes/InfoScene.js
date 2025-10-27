@@ -119,6 +119,44 @@ export default class InfoScene extends Phaser.Scene {
             .setOrigin(0.5)
             .setInteractive()
             .setDepth(2);
+
+        //"Play Tutorial" button
+        const btnY = yellowBox.y + yellowBox.displayHeight / 2 - 70; // near bottom of yellow card
+        const playTut = this.add.container(640, btnY)
+        .setDepth(2)
+        .setSize(320, 64)
+        .setInteractive({ useHandCursor: true });
+
+        // background
+        const btnBg = this.add.rectangle(0, 0, 400, 64, 0x333333, 1)
+        .setOrigin(0.5)
+        .setStrokeStyle(3, 0xff0000, 1);
+        playTut.add(btnBg);
+
+        //label
+        const btnTxt = this.add.bitmapText(0, 0, 'pixelFont', 'PLAY TUTORIAL', 28)
+        .setOrigin(0.5)
+        .setTint(0xffffff);
+        playTut.add(btnTxt);
+
+        // hover effects
+        playTut.on('pointerover', () => btnBg.setFillStyle(0x444444, 1));
+        playTut.on('pointerout',  () => btnBg.setFillStyle(0x333333, 1));
+
+        // click -> launch tutorial
+        playTut.on('pointerdown', () => {
+        if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
+
+        // mark tutorial mode if you use this flag
+        this.registry.set('tutorialMode', true);
+
+        // close overlays and menu cleanly
+        if (this.scene.isPaused('MenuScene')) this.scene.stop('MenuScene');
+        this.scene.stop('InfoScene');
+
+        // start guided tutorial race
+        this.scene.start('TutorialRaceScene');
+        });
             
         closeButton.on('pointerover', () => {
             closeButton.setStyle({ fill: '#ff0000' });
