@@ -660,7 +660,14 @@ export default class RaceScene extends Phaser.Scene {
         this.sound.stopByKey('sfx_nitrous'); 
 
 
-        let playerData = this.registry.get("playerData");
+        // pull player data (ensure defaults)
+        let playerData = this.registry.get("playerData") || {
+            level: 1, XP: 0, currency: 0, totalCurrencyEarned: 0,
+            stats: { races: 0, wins: 0, losses: 0 }, fastestTime: null
+        };
+
+        // ----- decide outcome & base rewards -----
+        playerData.stats.races += 1;
 
         //check who won and calculate stats/money
         let currencyEarned = 0;
@@ -685,6 +692,46 @@ export default class RaceScene extends Phaser.Scene {
             this.registry.set('youWin', true);
             this.botCar.finishTime = null; // set to null for display purposes
         }
+
+        //EXPANDED SUMMARY: earnings
+        //XP rules 
+        const baseXPWin  = 120;
+        const baseXPLoss = 60;
+        let xpEarned = this.registry.get('youWin') ? baseXPWin : baseXPLoss;
+
+        // perfect-shift bonus
+        if (this.playerCar.getPerfectShiftPercentage() === 100 && this.playerCar.getShiftCount() > 0) {
+        currencyEarned += 50;       
+        xpEarned += 40;              
+        }
+
+        //level curve helper
+        const xpForLevel = (lvl) => 200 + (lvl - 1) * 100; // e.g., L1→200, L2→300, L3→400...
+
+        //add XP and handle level-ups (loop in case we skip multiple levels)
+        playerData.XP = (playerData.XP ?? 0) + xpEarned;
+        let leveledUp = false;
+        while (playerData.XP >= xpForLevel(playerData.level)) {
+        playerData.XP -= xpForLevel(playerData.level);
+        playerData.level += 1;
+        leveledUp = true;
+        }
+
+         //money & fastest time
+        playerData.currency += currencyEarned;
+        playerData.totalCurrencyEarned = (playerData.totalCurrencyEarned ?? 0) + currencyEarned;
+
+        if (this.playerCar.finishTime && (!playerData.fastestTime || this.playerCar.finishTime < playerData.fastestTime)) {
+            playerData.fastestTime = this.playerCar.finishTime;
+        }
+
+        //stash data to show on EndScene
+        this.registry.set('summary_cashEarned', currencyEarned);
+        this.registry.set('summary_xpEarned', xpEarned);
+        this.registry.set('summary_level', playerData.level);
+        this.registry.set('summary_xpNow', playerData.XP);
+        this.registry.set('summary_xpNeeded', xpForLevel(playerData.level));
+        this.registry.set('summary_leveledUp', leveledUp);
 
         this.registry.set('finalTime', this.playerCar.finishTime);
         this.registry.set('topSpeed', this.playerCar?.topSpeed || 0);

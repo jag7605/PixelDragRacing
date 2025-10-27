@@ -53,38 +53,78 @@ export default class EndScene extends Phaser.Scene {
         }
 
         //add game over text
-        this.add.bitmapText(640, 100, 'pixelFont', 'GAME OVER', 60).setOrigin(0.5);
+        this.add.bitmapText(640, 120, 'pixelFont', 'GAME OVER', 60).setOrigin(0.5);
 
         //you win or you lose text
         this.add.bitmapText(640, 200, 'pixelFont', result, 50).setOrigin(0.5);
 
         //display final time
-        this.add.bitmapText(640, 300, 'pixelFont', `Your Time: ${displayFinalTime}`, 30).setOrigin(0.5);
+        this.add.bitmapText(640, 280, 'pixelFont', `Your Time: ${displayFinalTime}`, 30).setOrigin(0.5);
 
         //bot time
-        this.add.bitmapText(640, 360, 'pixelFont', `Opponent Time: ${displayBotTime}`, 30).setOrigin(0.5);
+        this.add.bitmapText(640, 340, 'pixelFont', `Opponent Time: ${displayBotTime}`, 30).setOrigin(0.5);
 
         //0-100 time
         //if zeroToHundredTime is null display N/A
         if (zeroToHundredTime === null) {
-            this.add.bitmapText(640, 420, 'pixelFont', `0-100 Time: N/A`, 30).setOrigin(0.5);
+            this.add.bitmapText(640, 400, 'pixelFont', `0-100 Time: N/A`, 30).setOrigin(0.5);
         } else {
-            this.add.bitmapText(640, 420, 'pixelFont', `0-100 Time: ${zeroToHundredTime.toFixed(2)}s`, 30).setOrigin(0.5);
+            this.add.bitmapText(640, 400, 'pixelFont', `0-100 Time: ${zeroToHundredTime.toFixed(2)}s`, 30).setOrigin(0.5);
         }
 
         //top speed
-        this.add.bitmapText(640, 480, 'pixelFont', `Top Speed: ${topSpeed.toFixed(1)} km/h`, 30).setOrigin(0.5);
+        this.add.bitmapText(640, 440, 'pixelFont', `Top Speed: ${topSpeed.toFixed(1)} km/h`, 30).setOrigin(0.5);
 
         //perfect shifts
-        this.add.bitmapText(640, 540, 'pixelFont', 
+        this.add.bitmapText(640, 500, 'pixelFont', 
             `Perfect Shifts: ${perfectShifts} / ${shiftCount} (${perfectShiftPercent}%)`, 
             30
         ).setOrigin(0.5);
 
+        //EXPANDED SUMMARY UI 
+        const cashEarned   = this.registry.get('summary_cashEarned') ?? 0;
+        const xpEarned     = this.registry.get('summary_xpEarned') ?? 0;
+        const levelNow     = this.registry.get('summary_level') ?? 1;
+        const xpNow        = this.registry.get('summary_xpNow') ?? 0;
+        const xpNeeded     = this.registry.get('summary_xpNeeded') ?? 200;
+        const leveledUp    = !!this.registry.get('summary_leveledUp');
+
+        // Section header
+        this.add.bitmapText(640, 550, 'pixelFont', 'REWARDS & PROGRESS', 32).setOrigin(0.5);
+
+        // Cash / XP line
+        this.add.bitmapText(640, 590, 'pixelFont',
+        `+ $${cashEarned}     + ${xpEarned} XP`, 26
+        ).setOrigin(0.5);
+
+        // Level & progress bar
+        this.add.bitmapText(420, 630, 'pixelFont', `Level ${levelNow}`, 24).setOrigin(0, 0.5);
+
+        // Bar background
+        const barX = 620, barY = 670, barW = 360, barH = 16;
+        const barBG = this.add.rectangle(barX, barY, barW, barH, 0x333333).setOrigin(0.5);
+
+        // Fill width
+        const pct = Phaser.Math.Clamp(xpNow / xpNeeded, 0, 1);
+        const barFill = this.add.rectangle(
+        barX - barW/2 + (barW * pct)/2, barY, barW * pct, barH, 0x4caf50
+        ).setOrigin(0.5);
+
+        // “XP till next” text
+        this.add.bitmapText(800, 630, 'pixelFont',
+        `${xpNow}/${xpNeeded} XP`, 20
+        ).setOrigin(0.5);
+
+        if (leveledUp) {
+        this.add.bitmapText(640, 710, 'pixelFont', 'LEVEL UP!', 28)
+            .setOrigin(0.5)
+            .setTint(0xffd54f);
+        }
+
 
         //add restart button with white rectangle background
         //add restart container for text and rectangle
-        const restartContainer = this.add.container(340, 660).setSize(300, 60).setInteractive();
+        const restartContainer = this.add.container(340, 720).setSize(300, 60).setInteractive();
 
         //add white rectangle
         const rect = this.add.rectangle(0, 0, 250, 60, 0xFFFFFF);
@@ -127,7 +167,7 @@ export default class EndScene extends Phaser.Scene {
         //main menu button
 
         //add menu container for text and rectangle
-        const MenuContainer = this.add.container(940, 660).setSize(300, 60).setInteractive();
+        const MenuContainer = this.add.container(940, 720).setSize(300, 60).setInteractive();
 
         //add white rectangle
         const rect1 = this.add.rectangle(0, 0, 250, 60, 0xFFFFFF);
@@ -168,5 +208,9 @@ export default class EndScene extends Phaser.Scene {
             restartContainer.setVisible(false).disableInteractive();
             MenuContainer.x = 640; // optional
         }
+
+        // === Nudge the whole end-screen UI upward ===
+        const SHIFT_UP = 60; // pixels
+        this.children.each(child => { child.y -= SHIFT_UP; });
     }  
 }
