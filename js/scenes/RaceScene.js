@@ -700,8 +700,7 @@ export default class RaceScene extends Phaser.Scene {
         //XP rules 
         const baseXPWin  = 120;
         const baseXPLoss = 60;
-        let xpEarned = this.registry.get('youWin') ? baseXPWin : baseXPLoss;
-
+        
         // perfect-shift bonus
         if (this.playerCar.getPerfectShiftPercentage() === 100 && this.playerCar.getShiftCount() > 0) {
         currencyEarned += 50;       
