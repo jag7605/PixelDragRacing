@@ -3,6 +3,7 @@ import Bot from '../gameplay/Bot.js';
 import PerfectStart from '../gameplay/PerfectStart.js';
 import { savePlayerDataFromScene } from '../utils/playerData.js';
 import { resizeCar } from '../utils/resize.js';
+import { xpForLevel } from '../utils/xp.js';
 
 export default class RaceScene extends Phaser.Scene {
     constructor(key = 'RaceScene') {
@@ -649,16 +650,14 @@ export default class RaceScene extends Phaser.Scene {
     raceOver() {
         if (this.raceEnded) return;
         this.raceEnded = true;
-        // stop update() from running the audio mixer, car logic, etc.
-        this.raceStarted = false;   
+        this.raceStarted = false;
 
         // stop nitrous sfx if still playing 
         this.sfxNitrous?.stop();
         this.sfxNitrous?.destroy();
         this.sfxNitrous = null;
         this.n2Playing = false;
-        this.sound.stopByKey('sfx_nitrous'); 
-
+        this.sound.stopByKey('sfx_nitrous');
 
         // pull player data (ensure defaults)
         let playerData = this.registry.get("playerData") || {
@@ -666,75 +665,84 @@ export default class RaceScene extends Phaser.Scene {
             stats: { races: 0, wins: 0, losses: 0 }, fastestTime: null
         };
 
-        // ----- decide outcome & base rewards -----
-        playerData.stats.races += 1;
+        // count the race once
+        playerData.stats.races = (playerData.stats.races ?? 0) + 1;
 
-        //check who won and calculate stats/money
-        playerData.stats.races += 1;
+        // ===== Rewards calculation (one place) =====
         let currencyEarned = 0;
         let xpEarned = 0;
+
         if (this.botCar.finishTime !== 'DNF' && this.playerCar.finishTime !== 'DNF') {
             if (this.playerCar.finishTime < this.botCar.finishTime) {
-                this.registry.set('youWin', true);
-                currencyEarned = 100;
-                xpEarned = 50;
-                playerData.stats.wins += 1;
-
-            } else {
-                this.registry.set('youWin', false);
-                currencyEarned = 20;
-                xpEarned = 10;
-                playerData.stats.losses += 1;
-            }
-        }
-        else if (this.playerCar.finishTime === 'DNF') {
-            this.registry.set('youWin', false); // player DNF
-            this.playerCar.finishTime = null; // set to null for display purposes
-        }
-        else {
             this.registry.set('youWin', true);
-            this.botCar.finishTime = null; // set to null for display purposes
+            currencyEarned = 100;
+            xpEarned = 50;
+            playerData.stats.wins = (playerData.stats.wins ?? 0) + 1;
+            } else {
+            this.registry.set('youWin', false);
+            currencyEarned = 20;
+            xpEarned = 10;
+            playerData.stats.losses = (playerData.stats.losses ?? 0) + 1;
+            }
+        } else if (this.playerCar.finishTime === 'DNF') {
+            this.registry.set('youWin', false);
+            this.playerCar.finishTime = null; // display as DNF
+        } else {
+            this.registry.set('youWin', true);
+            this.botCar.finishTime = null; // display as DNF
         }
 
-        //EXPANDED SUMMARY: earnings
-        //XP rules 
-        const baseXPWin  = 120;
-        const baseXPLoss = 60;
-        
-        // perfect-shift bonus
+        // Perfect-shift all-perfect bonus
         if (this.playerCar.getPerfectShiftPercentage() === 100 && this.playerCar.getShiftCount() > 0) {
-        currencyEarned += 50;       
-        xpEarned += 40;              
+            currencyEarned += 50;
+            xpEarned += 40;
         }
 
-        //level curve helper
-        const xpForLevel = (lvl) => 200 + (lvl - 1) * 100; // e.g., L1→200, L2→300, L3→400...
+        // Perfect-shift percentage bonus (>= 80%)
+        const psp = this.playerCar.getPerfectShiftPercentage();
+        if (psp >= 80) {
+            currencyEarned += (psp * 0.2); // 0.2 currency per percent
+        }
 
-        //add XP and handle level-ups (loop in case we skip multiple levels)
+        // Difficulty multiplier
+        const botSkill = this.registry.get('botSkill') || 0.7; // easy=0.5, normal=0.7, hard=0.9
+        if (botSkill === 0.7) { currencyEarned *= 1.2; xpEarned *= 1.2; }
+        else if (botSkill === 0.9) { currencyEarned *= 1.5; xpEarned *= 1.5; }
+
+        currencyEarned = Math.floor(currencyEarned);
+        xpEarned = Math.floor(xpEarned);
+
+        // ===== Apply ONCE to player data =====
+        playerData.currency = (playerData.currency ?? 0) + currencyEarned;
+        playerData.totalCurrencyEarned = (playerData.totalCurrencyEarned ?? 0) + currencyEarned;
         playerData.XP = (playerData.XP ?? 0) + xpEarned;
+
+        // Level-ups using the shared curve used by Menu/End screens
         let leveledUp = false;
         while (playerData.XP >= xpForLevel(playerData.level)) {
-        playerData.XP -= xpForLevel(playerData.level);
-        playerData.level += 1;
-        leveledUp = true;
+            playerData.XP -= xpForLevel(playerData.level);
+            playerData.level += 1;
+            leveledUp = true;
         }
 
-         //money & fastest time
-        playerData.currency += currencyEarned;
-        playerData.totalCurrencyEarned = (playerData.totalCurrencyEarned ?? 0) + currencyEarned;
+        // Shift stats
+        playerData.stats.totalShifts = (playerData.stats.totalShifts ?? 0) + this.playerCar.getShiftCount();
+        playerData.stats.shifts = (playerData.stats.shifts ?? 0) + this.playerCar.getPerfectShifts();
 
+        // Fastest time
         if (this.playerCar.finishTime && (!playerData.fastestTime || this.playerCar.finishTime < playerData.fastestTime)) {
             playerData.fastestTime = this.playerCar.finishTime;
         }
 
-        //stash data to show on EndScene
+        // ===== Summary for EndScene progress bar (matches MenuScene) =====
         this.registry.set('summary_cashEarned', currencyEarned);
-        this.registry.set('summary_xpEarned', xpEarned);
-        this.registry.set('summary_level', playerData.level);
-        this.registry.set('summary_xpNow', playerData.XP);
-        this.registry.set('summary_xpNeeded', xpForLevel(playerData.level));
-        this.registry.set('summary_leveledUp', leveledUp);
+        this.registry.set('summary_xpEarned',  xpEarned);
+        this.registry.set('summary_level',      playerData.level);
+        this.registry.set('summary_xpNow',      playerData.XP);
+        this.registry.set('summary_xpNeeded',   xpForLevel(playerData.level));
+        this.registry.set('summary_leveledUp',  leveledUp);
 
+        // Result stats for end screen
         this.registry.set('finalTime', this.playerCar.finishTime);
         this.registry.set('topSpeed', this.playerCar?.topSpeed || 0);
         this.registry.set('zeroToHundredTime', this.playerCar?.zeroToHundredTime ?? null);
@@ -743,57 +751,14 @@ export default class RaceScene extends Phaser.Scene {
         this.registry.set('shiftCount', this.playerCar.getShiftCount());
         this.registry.set('perfectShiftPercent', this.playerCar.getPerfectShiftPercentage());
 
-        //update player data in registry
-
-        //perfect shift bonus by percentage
-        const perfectShiftPercent = this.playerCar.getPerfectShiftPercentage();
-        if (perfectShiftPercent >= 80) {
-            currencyEarned += (perfectShiftPercent * 0.2); // 0.2 currency per percent
-        }
-
-        //add diffuiculty bonus and xp
-        const botSkill = this.registry.get('botSkill') || 0.7;
-        if (botSkill === 0.5) { // easy
-            currencyEarned *= 1;
-            xpEarned *= 1;
-        } else if (botSkill === 0.7) { // normal
-            currencyEarned *= 1.2;
-            xpEarned *= 1.2;
-        } else if (botSkill === 0.9) { // hard
-            currencyEarned *= 1.5;
-            xpEarned *= 1.5;
-        }
-
-        currencyEarned = Math.floor(currencyEarned); //round down
-
-        playerData.currency += currencyEarned;
-        playerData.totalCurrencyEarned += currencyEarned;
-        playerData.XP += xpEarned;
-        playerData.stats.totalShifts += this.playerCar.getShiftCount();
-        playerData.stats.shifts += this.playerCar.getPerfectShifts();
-
-        //check for level up
-        const xpForNextLevel = Math.floor(100 * Math.pow(1.5, playerData.level - 1));
-        if (playerData.XP >= xpForNextLevel) {
-            playerData.level += 1;
-            playerData.XP -= xpForNextLevel; //carry over extra xp
-        }
-
-        //check for fastest time
-        if (this.playerCar.finishTime && (!playerData.fastestTime || this.playerCar.finishTime < playerData.fastestTime)) {
-            playerData.fastestTime = this.playerCar.finishTime;
-        }
-
-        // Save updated player back to registry
+        // Save & exit
         this.registry.set("playerData", playerData);
-
-        //save to localStorage
         savePlayerDataFromScene(this);
 
-        this.sound.stopByKey('sfx_nitrous'); 
+        this.sound.stopByKey('sfx_nitrous');
         this.bgMusic?.stop();
         this.scene.start("EndScene");
-    }
+        }
 
     resetRace() {
         this.raceStarted = false;

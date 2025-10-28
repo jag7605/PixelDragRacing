@@ -1,6 +1,7 @@
 import MenuUi from '../ui/MenuUi.js';
 import { savePlayerDataFromScene } from '../utils/playerData.js';
 import ModeSelection from '../ui/ModeSelection.js';
+import { xpForLevel } from '../utils/xp.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
@@ -125,12 +126,12 @@ export default class MenuScene extends Phaser.Scene {
         const progressBarBg = this.add.rectangle(barX, barY, barWidth, barHeight, 0x555555).setOrigin(0, 0.5);
         const progressBarFill = this.add.rectangle(barX, barY, 0, barHeight, 0x068f06).setOrigin(0, 0.5);
 
-        const xpForNextLevel = Math.floor(100 * Math.pow(1.5, playerData.level - 1));
-        const xpProgress = Phaser.Math.Clamp(playerData.XP / xpForNextLevel, 0, 1);
-        progressBarFill.width = barWidth * xpProgress;
+       const need = xpForLevel(playerData.level);
+        const prog = Phaser.Math.Clamp(playerData.XP / need, 0, 1);
+        progressBarFill.width = barWidth * prog;
 
         //display how much they have vs how much they need for next level
-        const xpText = this.add.bitmapText(barX + barWidth / 2, barY, 'pixelFont', `${playerData.XP} / ${xpForNextLevel} XP`, 14).setOrigin(0.5);
+        const xpText = this.add.bitmapText(barX + barWidth / 2, barY, 'pixelFont', `${playerData.XP} / ${need} XP`, 14).setOrigin(0.5);
 
         //diplay username at top when logged in
         this.add.bitmapText(640, 32, 'pixelFont', `Hello, ${playerData.username}`, 24).setOrigin(0.5);
