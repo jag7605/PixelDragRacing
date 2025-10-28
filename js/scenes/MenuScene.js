@@ -3,32 +3,46 @@ import { savePlayerDataFromScene } from '../utils/playerData.js';
 import ModeSelection from '../ui/ModeSelection.js';
 import { xpForLevel } from '../utils/xp.js';
 
+// Import scenes to safely restart them
+import GarageScene from './GarageScene.js';
+import RaceScene from './RaceScene.js';
+
+// ——— SAFE SCENE RESTART HELPER ———
+// this function fixes a bug where restarting a scene that was shutdown causes errors (eg exiting race before completion then trying to go to garage)
+function safeStartScene(currentScene, sceneKey, SceneClass) {
+    const sm = currentScene.scene;
+    const existing = sm.get(sceneKey);
+    if (existing && existing.sys?.settings?.status === Phaser.Scene.SHUTDOWN) {
+        sm.remove(sceneKey);
+    }
+    if (!sm.get(sceneKey)) {
+        sm.add(sceneKey, SceneClass, false);
+    }
+    sm.start(sceneKey);
+}
+
 export default class MenuScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuScene' });
     }
 
     create() {
-        //set registry
+        // Set registry defaults
         if (this.registry.get('selectedCar') === undefined) {
             this.registry.set('selectedCar', 'beater_car');
         }
-
         if (this.registry.get('sfxMuted') === undefined) {
             this.registry.set('sfxMuted', false);
         }
-
         if (this.registry.get('musicMuted') === undefined) {
             this.registry.set('musicMuted', false);
         }
 
         const { width: W, height: H } = this.scale;
-
-        //get player data
         let playerData = this.registry.get("playerData");
 
         // Background
-        this.add.image(W / 2, H / 2, 'sky').setDisplaySize(W, H);
+        this.add.image(W / 2, H / 2, 'sky_night').setDisplaySize(W, H); // changed background to night for menu
         this.add.image(W / 2, H - 100, 'road').setDisplaySize(W, 200);
 
         // Logo
@@ -46,78 +60,74 @@ export default class MenuScene extends Phaser.Scene {
         // UI helper
         const ui = new MenuUi(this);
 
-        // Buttons
+        // SETTINGS BUTTON
         ui.createButton(W / 2 - 200, H - 140, 'btn_settings', 'SETTINGS', 0.55, 0.65, () => {
             this.scene.pause();
             this.scene.launch('SettingsScene');
-        },);
+        });
 
+        // START BUTTON (with Mode Selection flow)
         ui.createButton(W / 2, H - 120, 'btn_start', 'START', 0.65, 0.75, () => {
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
 
-            //Remove the button so it doesn't block overlay input
             if (this.startButton) {
                 this.startButton.disableInteractive();
                 this.startButton.destroy();
                 this.startButton = null;
             }
 
-            //show mode selection overlay
             ModeSelection.showModeSelection(this, (mode) => {
                 this.registry.set('raceMode', mode);
 
-                //difficulty
                 ModeSelection.showDifficultySelection(this, (botSkill) => {
                     this.registry.set('botSkill', botSkill);
 
-                    //track length
                     ModeSelection.showTrackLengthSelection(this, (trackLength) => {
                         this.registry.set('trackLength', trackLength);
                         this.registry.set('tutorialMode', false);
 
-                        this.scene.start('RaceScene');
+                        // SAFE RESTART RACE SCENE
+                        safeStartScene(this, 'RaceScene', RaceScene);
                     });
                 });
             });
         }, 95);
 
+        // GARAGE BUTTON
         ui.createButton(W / 2 + 200, H - 140, 'btn_garage', 'GARAGE', 0.45, 0.55, () => {
-            this.scene.start('GarageScene');
+            safeStartScene(this, 'GarageScene', GarageScene);
         });
 
-        // Info button
+        // INFO BUTTON
         ui.createButton(W - 40, 40, 'info', null, 0.3, 0.35, () => {
             this.scene.pause();
             this.scene.launch('InfoScene');
         });
 
-        //login button
+        // LOGIN / PROFILE BUTTON
         ui.createButton(W - 110, 40, 'login', null, 0.37, 0.4, () => {
             this.scene.pause();
-            if (playerData.username != 'Guest') {
+            if (playerData.username !== 'Guest') {
                 this.scene.launch('ProfileScene');
-            }
-            else {
+            } else {
                 this.scene.launch('LoginScene');
             }
-
         });
 
-        //stats button
+        // STATS BUTTON
         ui.createButton(W - 180, 40, 'stats', null, 0.3, 0.35, () => {
             this.scene.pause();
             this.scene.launch('StatsScene');
         });
 
-        //display money
+        // DISPLAY MONEY
         this.add.image(30, 30, 'moneyIcon').setScale(0.03);
         this.moneyText = this.add.bitmapText(70, 32, 'pixelFont', `$${playerData.currency.toString()}`, 24).setOrigin(0, 0.5);
 
-        //display level
-         //display level
-        const levelText = this.add.bitmapText(15,  80, 'pixelFont', `Level ${playerData.level}`, 20).setOrigin(0, 0.5);
+        // DISPLAY LEVEL
+        this.add.bitmapText(15, 80, 'pixelFont', `Level ${playerData.level}`, 20).setOrigin(0, 0.5);
 
-        //display level progress bar
+        // LEVEL PROGRESS BAR
         const barWidth = 200;
         const barHeight = 20;
         const barX = 15;
@@ -126,16 +136,16 @@ export default class MenuScene extends Phaser.Scene {
         const progressBarBg = this.add.rectangle(barX, barY, barWidth, barHeight, 0x555555).setOrigin(0, 0.5);
         const progressBarFill = this.add.rectangle(barX, barY, 0, barHeight, 0x068f06).setOrigin(0, 0.5);
 
-       const need = xpForLevel(playerData.level);
+        const need = xpForLevel(playerData.level);
         const prog = Phaser.Math.Clamp(playerData.XP / need, 0, 1);
         progressBarFill.width = barWidth * prog;
 
-        //display how much they have vs how much they need for next level
-        const xpText = this.add.bitmapText(barX + barWidth / 2, barY, 'pixelFont', `${playerData.XP} / ${need} XP`, 14).setOrigin(0.5);
+        this.add.bitmapText(barX + barWidth / 2, barY, 'pixelFont', `${playerData.XP} / ${need} XP`, 14).setOrigin(0.5);
 
-        //diplay username at top when logged in
+        // USERNAME
         this.add.bitmapText(640, 32, 'pixelFont', `Hello, ${playerData.username}`, 24).setOrigin(0.5);
 
+        // DEV: Add Level Button
         const levelButton = this.add.bitmapText(20, 130, 'pixelFont', 'add level', 10).setInteractive();
         levelButton.on('pointerover', () => levelButton.setTint(0x888888));
         levelButton.on('pointerout', () => levelButton.clearTint());
@@ -144,10 +154,10 @@ export default class MenuScene extends Phaser.Scene {
             playerData.level += 1;
             this.registry.set("playerData", playerData);
             savePlayerDataFromScene(this);
-            //reload scene to update level display
             this.scene.restart();
         });
 
+        // DEV: Add Money Button
         const moneyButton = this.add.bitmapText(20, 150, 'pixelFont', 'add money', 10).setInteractive();
         moneyButton.on('pointerover', () => moneyButton.setTint(0x888888));
         moneyButton.on('pointerout', () => moneyButton.clearTint());
@@ -155,11 +165,9 @@ export default class MenuScene extends Phaser.Scene {
             if (!this.registry.get('sfxMuted')) this.sound.play('buttonSound');
             playerData.currency += 100;
             this.moneyText.destroy();
-            this.moneyText = this.add.bitmapText(70, 20, 'pixelFont', `$${playerData.currency}`, 20).setOrigin(0, 0);
+            this.moneyText = this.add.bitmapText(70, 32, 'pixelFont', `$${playerData.currency}`, 24).setOrigin(0, 0.5);
             this.registry.set("playerData", playerData);
             savePlayerDataFromScene(this);
         });
-
     }
-
 }

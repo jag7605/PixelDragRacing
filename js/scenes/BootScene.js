@@ -254,7 +254,7 @@ export default class BootScene extends Phaser.Scene {
         scaleY: 0.7,
         duration: 800,
         ease: 'Back.Out',
-        onComplete: () => this.scene.start('DevSceneSwitch'), 
+        onComplete: () => this.scene.start('MenuScene'), 
       });
     });
       

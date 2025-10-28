@@ -21,7 +21,7 @@ export default class ProfileScene extends Phaser.Scene {
         this.add.bitmapText(640, 235, 'pixelFont', `Hello, ${playerData.username}`, 35).setOrigin(0.5, 0.5).setCenterAlign().setTint(0x852020);
 
         // display money
-        this.add.bitmapText(640, 280, 'pixelFont', `Current Prize: $${playerData.currency.toString()}`, 18)
+        this.add.bitmapText(640, 280, 'pixelFont', `Current Balance: $${playerData.currency.toString()}`, 18)
             .setOrigin(0.5)
             .setTint(0x852020);
 

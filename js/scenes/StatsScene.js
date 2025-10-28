@@ -28,7 +28,7 @@ export default class StatsScene extends Phaser.Scene {
             `Current Level: ${playerData.level}\n` +
             `Total Perfect Shifts: ${playerData.stats.shifts} / ${playerData.stats.totalShifts}\n` +
             `Total Currency Earned: $${playerData.totalCurrencyEarned}\n` +
-            `Current Currency: $${playerData.currency}\n` +
+            `Current Balance: $${playerData.currency}\n` +
             `Cars Unlocked: ${Object.keys(playerData.unlockedCars).length} / 8\n`+
             `Fastest Time: ${playerData.fastestTime ? playerData.fastestTime.toFixed(2) + 's' : 'N/A'}`;
 
