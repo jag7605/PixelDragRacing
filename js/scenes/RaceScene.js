@@ -203,7 +203,7 @@ export default class RaceScene extends Phaser.Scene {
         // === Backgrounds ===
         const mode = this.registry.get('raceMode') || 'day'; // fallback if not set
         const skyTexture = (mode === 'night') ? 'sky_night' : 'sky_day';
-        this.sky = this.add.tileSprite(0, 0, 7000, 720, skyTexture)
+        this.sky = this.add.tileSprite(0, 0, 70000, 720, skyTexture)
             .setOrigin(0, 0)
             .setPosition(0, 0)
             .setScale(0.5);
